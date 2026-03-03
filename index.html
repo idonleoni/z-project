@@ -603,7 +603,7 @@
             
             // Photo section - Base64 изображение
             if (task.hasPhoto && task.photoBase64) {
-                html += '<img src="' + task.photoBase64 + '" alt="' + task.name + '" class="w-full h-52 object-cover">';
+                html += '<img src="' + task.photoBase64 + '" alt="' + task.name + '" class="w-full h-52 object-cover" onerror="this.outerHTML=&quot;<div class=&quot;photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center&quot;><i class=&quot;fas fa-exclamation-triangle text-amber-500 text-5xl mb-3&quot;></i><p class=&quot;text-gray-500 font-semibold&quot;>Ошибка загрузки фото</p></div>&quot;">';
             } else {
                 html += '<div class="photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center">';
                 html += '<i class="fas fa-image text-gray-400 text-5xl mb-3"></i>';
@@ -872,10 +872,12 @@
                 if (result.success) {
                     // Обновляем карточку с Base64 изображением
                     const photoContainer = card.querySelector('.photo-placeholder');
-                    if (photoContainer) {
-                        // Используем Base64 из ответа сервера
-                        const imageData = result.photoBase64 || 'https://placehold.co/400x240/10b981/ffffff?text=Фото+загружено';
-                        photoContainer.outerHTML = '<img src="' + imageData + '" alt="Фото товара" class="w-full h-52 object-cover">';
+                    if (photoContainer && result.photoBase64) {
+                        // Используем Base64 из ответа сервера с обработкой ошибок
+                        photoContainer.outerHTML = '<img src="' + result.photoBase64 + '" alt="Фото товара" class="w-full h-52 object-cover" onerror="this.outerHTML=&quot;<div class=&quot;photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center&quot;><i class=&quot;fas fa-exclamation-triangle text-amber-500 text-5xl mb-3&quot;></i><p class=&quot;text-gray-500 font-semibold&quot;>Ошибка загрузки фото</p></div>&quot;">';
+                    } else if (photoContainer) {
+                        // Если Base64 не пришел, оставляем заглушку с сообщением об успехе
+                        photoContainer.innerHTML = '<i class="fas fa-check-circle text-emerald-500 text-5xl mb-3"></i><p class="text-gray-500 font-semibold">Фото загружено на сервер</p>';
                     }
                     
                     // Скрываем кнопку фото
