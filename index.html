@@ -403,7 +403,9 @@
         // КОНФИГУРАЦИЯ И ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
         // ============================================
         
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwlCBwr3Ei8zpN7PcVDGuXBolYoz9jAPTmopaUKUL8Dg6MpLnWTYWFLw5h8FAJdy2lAsg/exec'; // TODO: Заменить после деплоя (или оставить для демо-режима)
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwlCBwr3Ei8zpN7PcVDGuXBolYoz9jAPTmopaUKUL8Dg6MpLnWTYWFLw5h8FAJdy2lAsg/exec';
+        const USE_CORS_PROXY = true; // Включаем CORS proxy для GitHub Pages
+        const CORS_PROXY = 'https://corsproxy.io/?'; // Альтернативы: https://api.allorigins.win/raw?url=
         
         let totalEarnings = 0;
         let completedCards = 0;
@@ -420,8 +422,11 @@
         
         async function apiCall(action, params = {}) {
             try {
+                // Формируем URL с прокси если нужно
+                const targetUrl = USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(API_URL) : API_URL;
+                
                 // Шлем POST-запрос. ВАЖНО: Content-Type строго text/plain, чтобы избежать CORS preflight!
-                const response = await fetch(API_URL, {
+                const response = await fetch(targetUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action, ...params })
