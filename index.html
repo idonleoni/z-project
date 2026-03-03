@@ -589,7 +589,18 @@
             
             // Photo section - ИСПРАВЛЕНИЕ: правильная проверка hasPhoto
             if (task.hasPhoto && task.photoUrl) {
-                html += '<img src="' + task.photoUrl + '" alt="' + task.name + '" class="w-full h-52 object-cover">';
+                // Конвертируем Google Drive ссылку в прямую ссылку на изображение
+                let imageUrl = task.photoUrl;
+                if (imageUrl.includes('drive.google.com/file/d/')) {
+                    const fileId = imageUrl.match(/\/d\/([^\/]+)/)[1];
+                    imageUrl = 'https://drive.google.com/uc?export=view&id=' + fileId;
+                } else if (!imageUrl.includes('drive.google.com/uc')) {
+                    // Если это уже формат uc?id=, оставляем как есть, иначе добавляем export=view
+                    if (imageUrl.includes('drive.google.com/uc?id=')) {
+                        imageUrl = imageUrl.replace('uc?id=', 'uc?export=view&id=');
+                    }
+                }
+                html += '<img src="' + imageUrl + '" alt="' + task.name + '" class="w-full h-52 object-cover" onerror="this.parentElement.innerHTML=\'<div class=&quot;photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center&quot;><i class=&quot;fas fa-exclamation-triangle text-amber-500 text-5xl mb-3&quot;></i><p class=&quot;text-gray-500 font-semibold&quot;>Ошибка загрузки фото</p></div>\'">';
             } else {
                 html += '<div class="photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center">';
                 html += '<i class="fas fa-image text-gray-400 text-5xl mb-3"></i>';
@@ -859,7 +870,12 @@
                     // Обновляем карточку
                     const photoContainer = card.querySelector('.photo-placeholder');
                     if (photoContainer) {
-                        photoContainer.outerHTML = '<img src="' + (result.photoUrl || 'https://placehold.co/400x240/10b981/ffffff?text=Фото+загружено') + '" alt="Фото товара" class="w-full h-52 object-cover">';
+                        // Конвертируем Google Drive ссылку в прямую ссылку на изображение
+                        let imageUrl = result.photoUrl || 'https://placehold.co/400x240/10b981/ffffff?text=Фото+загружено';
+                        if (imageUrl.includes('drive.google.com/uc?id=')) {
+                            imageUrl = imageUrl.replace('uc?id=', 'uc?export=view&id=');
+                        }
+                        photoContainer.outerHTML = '<img src="' + imageUrl + '" alt="Фото товара" class="w-full h-52 object-cover" onerror="this.src=\'https://placehold.co/400x240/10b981/ffffff?text=Фото+загружено\'">';
                     }
                     
                     // Скрываем кнопку фото
