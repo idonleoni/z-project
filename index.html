@@ -486,7 +486,7 @@
         }
 
         function initializePinAuth() {
-            document.querySelectorAll('.numpad-btn[data-num]').forEach(btn => {
+            document.querySelectorAll('button[data-num]').forEach(btn => {
                 btn.addEventListener('click', function() {
                     if (pinCode.length < 4) {
                         pinCode += this.dataset.num;
