@@ -933,6 +933,17 @@
             
             const card = activePhotoBtn.closest('.product-card');
             const taskId = card.dataset.taskId;
+            const artikul = card.dataset.artikul;
+            const name = card.dataset.name;
+            
+            // АНТИ-АБУЗ: Проверяем, не заблокирована ли уже кнопка
+            if (activePhotoBtn.disabled) {
+                showToast('Фото уже загружается или товар оцифрован', 'error');
+                return;
+            }
+            
+            // Блокируем кнопку сразу
+            activePhotoBtn.disabled = true;
             
             try {
                 // МГНОВЕННЫЙ РЕНДЕР: Сжимаем и показываем фото ДО отправки на сервер
@@ -941,7 +952,7 @@
                 // Заменяем placeholder на изображение
                 const photoContainer = card.querySelector('.photo-placeholder');
                 if (photoContainer) {
-                    photoContainer.outerHTML = '<div class="relative"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-52 object-cover"><div class="absolute inset-0 bg-black/30 flex items-center justify-center"><div class="spinner"></div></div></div>';
+                    photoContainer.outerHTML = '<div class="relative w-full aspect-square bg-gray-100"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-full object-contain"><div class="absolute inset-0 bg-black/30 flex items-center justify-center"><div class="spinner"></div><p class="text-white ml-3">Загрузка...</p></div></div>';
                 }
                 
                 // Скрываем кнопку фото
@@ -955,8 +966,8 @@
                     userId: currentUser.userId,
                     taskId: taskId,
                     photoData: base64,
-                    artikul: card.querySelector('.text-xs').textContent.replace('Артикул: ', ''),
-                    name: card.querySelector('h3').textContent
+                    artikul: artikul,
+                    name: name
                 });
                 
                 // Убираем лоадер
@@ -990,22 +1001,31 @@
                     updateEarnings(result.bonus || 10);
                     showToast('Товар успешно оцифрован! +' + (result.bonus || 10) + ' ₽', 'success');
                 } else {
+                    // АНТИ-АБУЗ: Показываем ошибку от сервера
                     throw new Error(result.error || 'Ошибка загрузки фото');
                 }
                 
             } catch (error) {
                 console.error('Photo upload error:', error);
-                showToast('Ошибка загрузки фото: ' + error.message, 'error');
                 
-                // Восстанавливаем кнопку
-                const photoContainer = card.querySelector('.relative');
-                if (photoContainer) {
-                    photoContainer.outerHTML = '<div class="photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center"><i class="fas fa-exclamation-triangle text-amber-500 text-5xl mb-3"></i><p class="text-gray-500 font-semibold">Ошибка загрузки</p></div>';
+                // Показываем понятное сообщение об ошибке
+                if (error.message.includes('уже оцифровано')) {
+                    showToast('⚠️ ' + error.message, 'error');
+                } else {
+                    showToast('Ошибка загрузки фото: ' + error.message, 'error');
                 }
                 
+                // Восстанавливаем placeholder
+                const photoContainer = card.querySelector('.relative');
+                if (photoContainer) {
+                    photoContainer.outerHTML = '<div class="photo-placeholder w-full aspect-square bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center"><i class="fas fa-exclamation-triangle text-amber-500 text-5xl mb-3"></i><p class="text-gray-500 font-semibold px-4 text-center">' + error.message + '</p></div>';
+                }
+                
+                // НЕ восстанавливаем кнопку - товар уже оцифрован другим сотрудником
                 const photoButtonContainer = card.querySelector('.photo-button-container');
-                if (photoButtonContainer) {
+                if (photoButtonContainer && !error.message.includes('уже оцифровано')) {
                     photoButtonContainer.style.display = 'block';
+                    activePhotoBtn.disabled = false;
                 }
             }
             
