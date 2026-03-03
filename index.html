@@ -660,6 +660,9 @@
             const card = document.createElement('div');
             card.className = 'product-card bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 fade-in';
             card.dataset.taskId = task.id;
+            card.dataset.artikul = task.artikul;
+            card.dataset.name = task.name;
+            card.dataset.store = currentUser.store;
             
             let html = '';
             
@@ -687,7 +690,7 @@
             html += '<input type="number" class="qty-input w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none transition-all" placeholder="' + task.qty + '" value="' + task.qty + '" min="0">';
             html += '</div>';
             
-            // Photo button or action buttons
+            // ЗАДАЧА 4: Кнопка фото только если товар НЕ оцифрован
             if (!task.hasPhoto || !task.photoBase64) {
                 html += '<div class="photo-button-container mb-4">';
                 html += '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden">';
@@ -831,28 +834,52 @@
             button.classList.add('opacity-75', 'cursor-not-allowed');
             button.innerHTML = '<div class="spinner mx-auto"></div>';
             
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // ЗАДАЧА 4: Извлекаем данные из карточки для отправки на бэкенд
+            const taskId = card.dataset.taskId;
+            const artikul = card.dataset.artikul;
+            const name = card.dataset.name;
+            const store = card.dataset.store;
+            const qty = parseFloat(card.querySelector('.qty-input').value) || 0;
             
-            card.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(-20px)';
+            // Отправляем на бэкенд
+            const result = await apiCall('submitAction', {
+                userId: currentUser.userId,
+                taskId: taskId,
+                action: action,
+                reason: reason || '',
+                qty: qty,
+                artikul: artikul,
+                name: name,
+                store: store
+            });
             
-            setTimeout(() => {
-                card.style.display = 'none';
-                completedCards++;
+            if (result.success) {
+                card.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(-20px)';
                 
-                let message = 'Успешно отправлено в РНП';
-                if (reason) {
-                    message += ' (' + reason + ')';
-                }
-                showToast(message);
-                
-                if (action === 'sell') {
-                    updateEarnings(50);
-                }
-                
-                checkCompletion();
-            }, 500);
+                setTimeout(() => {
+                    card.style.display = 'none';
+                    completedCards++;
+                    
+                    let message = result.message || 'Успешно отправлено в РНП';
+                    if (reason) {
+                        message += ' (' + reason + ')';
+                    }
+                    showToast(message);
+                    
+                    if (result.bonus > 0) {
+                        updateEarnings(result.bonus);
+                    }
+                    
+                    checkCompletion();
+                }, 500);
+            } else {
+                button.disabled = false;
+                button.classList.remove('opacity-75', 'cursor-not-allowed');
+                button.innerHTML = originalContent;
+                showToast('Ошибка: ' + (result.error || 'Неизвестная ошибка'), 'error');
+            }
         }
 
         // ============================================
