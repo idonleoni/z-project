@@ -551,17 +551,23 @@
         async function loadTasks() {
             if (!currentUser) return;
             
+            console.log('Загрузка задач для:', currentUser);
+            
             const result = await apiCall('getTasks', {
                 userId: currentUser.userId,
                 store: currentUser.store
             });
             
+            console.log('Результат загрузки задач:', result);
+            
             if (result.success) {
-                tasksData = result.tasks;
+                tasksData = result.tasks || [];
                 totalCards = tasksData.length;
+                console.log('Загружено задач:', totalCards);
                 renderTasks();
             } else {
-                showToast('Ошибка загрузки задач', 'error');
+                console.error('Ошибка загрузки задач:', result.error);
+                showToast('Ошибка загрузки задач: ' + (result.error || 'Неизвестная ошибка'), 'error');
             }
         }
         
@@ -574,12 +580,15 @@
             noTasksMsg.classList.add('hidden');
             completionMsg.classList.add('hidden');
             
+            console.log('Рендеринг задач, количество:', tasksData.length);
+            
             if (tasksData.length === 0) {
                 noTasksMsg.classList.remove('hidden');
                 return;
             }
             
             tasksData.forEach((task, index) => {
+                console.log('Создание карточки для задачи:', task);
                 const card = createTaskCard(task, index);
                 container.appendChild(card);
             });
