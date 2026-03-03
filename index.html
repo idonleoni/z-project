@@ -404,8 +404,8 @@
         // ============================================
         
         const API_URL = 'https://script.google.com/macros/s/AKfycbwlCBwr3Ei8zpN7PcVDGuXBolYoz9jAPTmopaUKUL8Dg6MpLnWTYWFLw5h8FAJdy2lAsg/exec';
-        const USE_CORS_PROXY = true; // Включаем CORS proxy для GitHub Pages
-        const CORS_PROXY = 'https://corsproxy.io/?'; // Альтернативы: https://api.allorigins.win/raw?url=
+        const USE_CORS_PROXY = false; // Отключаем CORS proxy
+        const CORS_PROXY = 'https://corsproxy.io/?';
         
         let totalEarnings = 0;
         let completedCards = 0;
@@ -601,20 +601,9 @@
             
             let html = '';
             
-            // Photo section - ИСПРАВЛЕНИЕ: правильная проверка hasPhoto
-            if (task.hasPhoto && task.photoUrl) {
-                // Конвертируем Google Drive ссылку в прямую ссылку на изображение
-                let imageUrl = task.photoUrl;
-                if (imageUrl.includes('drive.google.com/file/d/')) {
-                    const fileId = imageUrl.match(/\/d\/([^\/]+)/)[1];
-                    imageUrl = 'https://drive.google.com/uc?export=view&id=' + fileId;
-                } else if (!imageUrl.includes('drive.google.com/uc')) {
-                    // Если это уже формат uc?id=, оставляем как есть, иначе добавляем export=view
-                    if (imageUrl.includes('drive.google.com/uc?id=')) {
-                        imageUrl = imageUrl.replace('uc?id=', 'uc?export=view&id=');
-                    }
-                }
-                html += '<img src="' + imageUrl + '" alt="' + task.name + '" class="w-full h-52 object-cover" onerror="this.parentElement.innerHTML=\'<div class=&quot;photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center&quot;><i class=&quot;fas fa-exclamation-triangle text-amber-500 text-5xl mb-3&quot;></i><p class=&quot;text-gray-500 font-semibold&quot;>Ошибка загрузки фото</p></div>\'">';
+            // Photo section - Base64 изображение
+            if (task.hasPhoto && task.photoBase64) {
+                html += '<img src="' + task.photoBase64 + '" alt="' + task.name + '" class="w-full h-52 object-cover">';
             } else {
                 html += '<div class="photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center">';
                 html += '<i class="fas fa-image text-gray-400 text-5xl mb-3"></i>';
@@ -634,8 +623,8 @@
             html += '<input type="number" class="qty-input w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors" placeholder="' + task.qty + '" value="' + task.qty + '" min="0">';
             html += '</div>';
             
-            // Photo button or action buttons - ИСПРАВЛЕНИЕ: проверяем hasPhoto правильно
-            if (!task.hasPhoto || !task.photoUrl) {
+            // Photo button or action buttons - Base64 проверка
+            if (!task.hasPhoto || !task.photoBase64) {
                 html += '<div class="photo-button-container mb-4">';
                 html += '<button class="photo-btn w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-5 px-6 rounded-2xl text-lg transition-all shadow-xl hover:shadow-2xl relative overflow-hidden">';
                 html += '<span class="absolute inset-0 bg-blue-400 opacity-50 pulse-ring rounded-2xl"></span>';
@@ -649,8 +638,8 @@
                 html += '<div class="action-buttons grid grid-cols-3 gap-2">';
             }
             
-            // Action buttons - ИСПРАВЛЕНИЕ: правильная проверка для disabled
-            const hasPhotoForActions = task.hasPhoto && task.photoUrl;
+            // Action buttons - Base64 проверка
+            const hasPhotoForActions = task.hasPhoto && task.photoBase64;
             const disabledAttr = !hasPhotoForActions ? ' disabled' : '';
             html += '<button class="action-btn bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-2 rounded-xl text-sm transition-all shadow-md hover:shadow-lg" data-action="discount"' + disabledAttr + '>';
             html += '<i class="fas fa-tag mr-1"></i>Уценить';
@@ -881,15 +870,12 @@
                 });
                 
                 if (result.success) {
-                    // Обновляем карточку
+                    // Обновляем карточку с Base64 изображением
                     const photoContainer = card.querySelector('.photo-placeholder');
                     if (photoContainer) {
-                        // Конвертируем Google Drive ссылку в прямую ссылку на изображение
-                        let imageUrl = result.photoUrl || 'https://placehold.co/400x240/10b981/ffffff?text=Фото+загружено';
-                        if (imageUrl.includes('drive.google.com/uc?id=')) {
-                            imageUrl = imageUrl.replace('uc?id=', 'uc?export=view&id=');
-                        }
-                        photoContainer.outerHTML = '<img src="' + imageUrl + '" alt="Фото товара" class="w-full h-52 object-cover" onerror="this.src=\'https://placehold.co/400x240/10b981/ffffff?text=Фото+загружено\'">';
+                        // Используем Base64 из ответа сервера
+                        const imageData = result.photoBase64 || 'https://placehold.co/400x240/10b981/ffffff?text=Фото+загружено';
+                        photoContainer.outerHTML = '<img src="' + imageData + '" alt="Фото товара" class="w-full h-52 object-cover">';
                     }
                     
                     // Скрываем кнопку фото
