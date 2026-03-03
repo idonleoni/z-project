@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#E31E24">
     <title>Zavkhoz OS</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="logo.jpg">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -14,60 +20,47 @@
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            background: #F5F4F0;
         }
         
-        @keyframes pulse-scale {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
+        /* Микроанимации */
+        .btn-spring {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .pulse-animation {
-            animation: pulse-scale 0.5s ease-in-out 2;
-        }
-        
-        @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-20px); }
-        }
-        .fade-out {
-            animation: fadeOut 0.5s ease-out forwards;
+        .btn-spring:active {
+            transform: scale(0.95);
         }
         
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        /* Скелетон загрузки */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        .toast {
-            animation: slideUp 0.3s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
+        .skeleton {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            background: linear-gradient(90deg, #e5e5e5 25%, #f0f0f0 50%, #e5e5e5 75%);
+            background-size: 200% 100%;
         }
         
-        @keyframes slideUpOut {
-            from { transform: translateY(0); opacity: 1; }
-            to { transform: translateY(-100%); opacity: 0; }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
-        .slide-up-out {
-            animation: slideUpOut 0.6s ease-in-out forwards;
-        }
-        
-        @keyframes scaleIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .scale-in {
-            animation: scaleIn 0.3s ease-out;
+        .skeleton {
+            animation: shimmer 1.5s infinite;
         }
         
+        /* Стеклянный эффект */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        /* Spinner */
         .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
+            border: 3px solid rgba(227, 30, 36, 0.3);
+            border-top-color: #E31E24;
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -78,88 +71,76 @@
             to { transform: rotate(360deg); }
         }
         
-        @keyframes pulse-ring {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.3); opacity: 0; }
+        /* Fade анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .pulse-ring {
-            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-        .shake {
-            animation: shake 0.4s ease-in-out;
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
         }
         
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast {
+            animation: slideUp 0.3s ease-out;
         }
         
+        /* Активная вкладка */
         .tab-active {
-            color: #3b82f6;
+            color: #E31E24;
         }
-        
         .tab-inactive {
             color: #9ca3af;
         }
         
+        /* Progress bar */
         .progress-bar-transition {
             transition: width 0.5s ease-in-out, background-color 0.3s ease;
         }
-        
-        .numpad-btn {
-            transition: all 0.1s ease;
-        }
-        
-        .numpad-btn:active {
-            transform: scale(0.95);
-        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen pb-20">
+<body class="min-h-screen pb-20">
     
-    <!-- PIN Auth Screen (Overlay) -->
-    <div id="pin-auth-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
+    <!-- PIN Auth Screen -->
+    <div id="pin-auth-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center">
         <div class="text-center px-6">
             <div class="mb-8">
                 <div class="w-24 h-24 bg-white rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-6">
-                    <i class="fas fa-lock text-blue-600 text-5xl"></i>
+                    <i class="fas fa-lock text-[#E31E24] text-5xl"></i>
                 </div>
-                <h1 class="text-3xl font-bold text-white mb-2">Zavkhoz OS</h1>
-                <p class="text-blue-200 text-sm">Введите PIN-код для входа</p>
+                <img src="logo.jpg" alt="Zavkhoz" class="h-12 mx-auto mb-4" onerror="this.style.display='none'">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Zavkhoz OS</h1>
+                <p class="text-gray-600 text-sm">Введите PIN-код для входа</p>
             </div>
             
             <div class="mb-8">
                 <div class="flex justify-center gap-4 mb-6">
-                    <div id="pin-dot-1" class="w-4 h-4 rounded-full bg-white/30 transition-all"></div>
-                    <div id="pin-dot-2" class="w-4 h-4 rounded-full bg-white/30 transition-all"></div>
-                    <div id="pin-dot-3" class="w-4 h-4 rounded-full bg-white/30 transition-all"></div>
-                    <div id="pin-dot-4" class="w-4 h-4 rounded-full bg-white/30 transition-all"></div>
+                    <div id="pin-dot-1" class="w-4 h-4 rounded-full bg-gray-300 transition-all"></div>
+                    <div id="pin-dot-2" class="w-4 h-4 rounded-full bg-gray-300 transition-all"></div>
+                    <div id="pin-dot-3" class="w-4 h-4 rounded-full bg-gray-300 transition-all"></div>
+                    <div id="pin-dot-4" class="w-4 h-4 rounded-full bg-gray-300 transition-all"></div>
                 </div>
-                <p id="pin-error" class="text-red-300 text-sm h-5"></p>
+                <p id="pin-error" class="text-red-500 text-sm h-5"></p>
             </div>
             
             <!-- Numpad -->
             <div class="max-w-xs mx-auto">
                 <div class="grid grid-cols-3 gap-4 mb-4">
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="1">1</button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="2">2</button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="3">3</button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="4">4</button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="5">5</button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="6">6</button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="7">7</button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="8">8</button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="9">9</button>
-                    <button class="numpad-btn bg-white/10 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm opacity-0 pointer-events-none"></button>
-                    <button class="numpad-btn bg-white/20 hover:bg-white/30 text-white text-2xl font-bold py-6 rounded-2xl backdrop-blur-sm" data-num="0">0</button>
-                    <button id="pin-clear-btn" class="numpad-btn bg-red-500/30 hover:bg-red-500/50 text-white text-xl font-bold py-6 rounded-2xl backdrop-blur-sm">
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="1">1</button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="2">2</button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="3">3</button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="4">4</button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="5">5</button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="6">6</button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="7">7</button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="8">8</button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="9">9</button>
+                    <button class="opacity-0 pointer-events-none"></button>
+                    <button class="btn-spring bg-white hover:bg-gray-50 text-gray-800 text-2xl font-bold py-6 rounded-2xl shadow-sm" data-num="0">0</button>
+                    <button id="pin-clear-btn" class="btn-spring bg-red-50 hover:bg-red-100 text-[#E31E24] text-xl font-bold py-6 rounded-2xl shadow-sm">
                         <i class="fas fa-backspace"></i>
                     </button>
                 </div>
@@ -172,18 +153,18 @@
 
     <!-- Modal: Reason Input -->
     <div id="reason-modal" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full scale-in">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full fade-in">
             <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-exclamation-circle text-amber-500 mr-3"></i>
                     Укажите причину
                 </h3>
-                <textarea id="reason-input" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none" rows="3" placeholder="Например: брак, порвана коробка, истек срок..."></textarea>
+                <textarea id="reason-input" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none resize-none" rows="3" placeholder="Например: брак, порвана коробка, истек срок..."></textarea>
                 <div class="flex gap-3 mt-4">
-                    <button id="reason-cancel-btn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl transition-colors">
+                    <button id="reason-cancel-btn" class="flex-1 btn-spring bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl">
                         Отмена
                     </button>
-                    <button id="reason-confirm-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors">
+                    <button id="reason-confirm-btn" class="flex-1 btn-spring bg-[#E31E24] hover:bg-[#c91a1f] text-white font-semibold py-3 rounded-xl">
                         Подтвердить
                     </button>
                 </div>
@@ -193,18 +174,18 @@
 
     <!-- Modal: Shift Confirmation -->
     <div id="shift-confirm-modal" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full scale-in">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full fade-in">
             <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <i class="fas fa-shield-alt text-red-500 mr-3"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-shield-alt text-[#E31E24] mr-3"></i>
                     Подтверждение сдачи смены
                 </h3>
                 <p class="text-gray-700 mb-6">Вы уверены? Данные уйдут руководству без возможности изменения.</p>
                 <div class="flex gap-3">
-                    <button id="shift-cancel-btn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl transition-colors">
+                    <button id="shift-cancel-btn" class="flex-1 btn-spring bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl">
                         Отмена
                     </button>
-                    <button id="shift-confirm-btn-final" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl transition-colors">
+                    <button id="shift-confirm-btn-final" class="flex-1 btn-spring bg-[#E31E24] hover:bg-[#c91a1f] text-white font-semibold py-3 rounded-xl">
                         Да, сдать смену
                     </button>
                 </div>
@@ -217,10 +198,10 @@
         <div class="px-5 py-4">
             <div class="flex items-center justify-between mb-3">
                 <div>
-                    <h1 class="text-lg font-bold text-gray-900">Zavkhoz OS</h1>
-                    <p class="text-xs text-gray-500">Завхоз Привокзальная</p>
+                    <img src="logo.jpg" alt="Zavkhoz" class="h-8 mb-1" onerror="this.outerHTML='<h1 class=&quot;text-lg font-bold text-gray-800&quot;>Zavkhoz OS</h1>'">
+                    <p class="text-xs text-gray-500" id="store-name">Завхоз Привокзальная</p>
                 </div>
-                <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white font-semibold shadow-lg">
+                <div class="w-11 h-11 bg-gradient-to-br from-[#E31E24] to-[#c91a1f] rounded-2xl flex items-center justify-center text-white font-semibold shadow-lg" id="user-avatar">
                     ИИ
                 </div>
             </div>
@@ -236,47 +217,53 @@
         
         <!-- Tab 1: Задачи -->
         <div id="tab-tasks" class="tab-content fade-in">
-            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <i class="fas fa-tasks mr-2 text-blue-600"></i>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-tasks mr-2 text-[#E31E24]"></i>
                 Задачи на сегодня
             </h2>
             
-            <div id="products-container" class="space-y-4">
+            <!-- Скелетоны загрузки -->
+            <div id="loading-skeleton" class="space-y-4">
+                <div class="skeleton bg-white rounded-3xl h-96"></div>
+                <div class="skeleton bg-white rounded-3xl h-96"></div>
+            </div>
+            
+            <div id="products-container" class="space-y-4 hidden">
                 <!-- Карточки загружаются динамически -->
             </div>
 
             <!-- Сообщение о завершении -->
             <div id="completion-message" class="hidden text-center py-12">
                 <div class="text-7xl mb-4">🎉</div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Все задачи выполнены!</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Все задачи выполнены!</h2>
                 <p class="text-lg text-gray-600">Отличная работа.</p>
             </div>
             
             <!-- Сообщение "Нет задач" -->
             <div id="no-tasks-message" class="hidden text-center py-12">
                 <div class="text-7xl mb-4">📦</div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Задач пока нет</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Задач пока нет</h2>
                 <p class="text-lg text-gray-600">Новые задачи появятся после загрузки данных из 1С</p>
             </div>
         </div>
 
         <!-- Tab 2: Смена -->
         <div id="tab-shift" class="tab-content hidden">
-            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-cash-register mr-2 text-emerald-600"></i>
                 Закрытие смены
             </h2>
             
-            <div class="bg-white rounded-3xl shadow-lg p-6 mb-4 border border-gray-100">
-                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                    <i class="fas fa-traffic-light mr-2 text-yellow-500"></i>
+            <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-traffic-light mr-2 text-[#FFC107]"></i>
                     Светофор выручки
                 </h3>
                 
                 <div class="mb-4">
                     <div class="flex justify-between text-sm mb-2">
                         <span class="text-gray-600 font-medium">Цель на сегодня</span>
-                        <span class="font-bold text-gray-900">100 000 ₽</span>
+                        <span class="font-bold text-gray-800">100 000 ₽</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                         <div id="revenue-progress" class="h-3 progress-bar-transition bg-gray-400 rounded-full" style="width: 0%"></div>
@@ -285,17 +272,17 @@
                 
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Фактическая выручка в кассе</label>
-                    <input id="revenue-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors" placeholder="0" min="0">
+                    <input id="revenue-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none transition-all" placeholder="0" min="0">
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Количество чеков</label>
-                        <input id="checks-count-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors" placeholder="0" min="0">
+                        <input id="checks-count-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none transition-all" placeholder="0" min="0">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Сумма возвратов</label>
-                        <input id="returns-amount-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors" placeholder="0" min="0">
+                        <input id="returns-amount-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none transition-all" placeholder="0" min="0">
                     </div>
                 </div>
                 
@@ -304,11 +291,11 @@
                         <i class="fas fa-gift text-indigo-600 mr-1"></i>
                         Подключено клиентов UDS
                     </label>
-                    <input id="uds-connected-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors" placeholder="0" min="0">
+                    <input id="uds-connected-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-all" placeholder="0" min="0">
                     <p class="text-xs text-gray-500 mt-1">За каждого клиента начисляется бонус</p>
                 </div>
                 
-                <button id="submit-shift-btn" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-2xl text-lg transition-all shadow-lg hover:shadow-xl">
+                <button id="submit-shift-btn" class="w-full btn-spring bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">
                     <i class="fas fa-paper-plane mr-2"></i>
                     Сдать смену и отправить отчет шефу
                 </button>
@@ -317,19 +304,19 @@
 
         <!-- Tab 3: Профиль -->
         <div id="tab-profile" class="tab-content hidden">
-            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-user mr-2 text-purple-600"></i>
                 Профиль
             </h2>
             
-            <div class="bg-white rounded-3xl shadow-lg p-6 mb-4 border border-gray-100">
+            <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
                 <div class="flex items-center mb-6">
-                    <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl flex items-center justify-center text-white text-3xl font-bold shadow-lg mr-4">
+                    <div class="w-20 h-20 bg-gradient-to-br from-[#E31E24] to-[#c91a1f] rounded-3xl flex items-center justify-center text-white text-3xl font-bold shadow-lg mr-4" id="profile-avatar">
                         ИИ
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-gray-900">Иванов Иван</h3>
-                        <p class="text-sm text-gray-500">Магазин Завхоз</p>
+                        <h3 class="text-xl font-bold text-gray-800" id="profile-name">Иванов Иван</h3>
+                        <p class="text-sm text-gray-500" id="profile-store">Магазин Завхоз</p>
                         <p class="text-xs text-gray-400 mt-1">Продавец-консультант</p>
                     </div>
                 </div>
@@ -339,7 +326,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <div class="text-xs text-indigo-600 font-bold uppercase tracking-wide mb-1">UDS Программа лояльности</div>
-                            <div class="text-lg font-bold text-gray-900">Подключено сегодня: <span id="profile-uds-connected" class="text-indigo-600">0 клиентов</span></div>
+                            <div class="text-lg font-bold text-gray-800">Подключено сегодня: <span id="profile-uds-connected" class="text-indigo-600">0 клиентов</span></div>
                             <div class="text-sm text-emerald-600 font-semibold mt-1">
                                 <i class="fas fa-coins mr-1"></i><span id="profile-uds-bonus">+0 ₽</span> бонус
                             </div>
@@ -348,7 +335,7 @@
                     </div>
                 </div>
                 
-                <div class="border-t border-gray-200 pt-4">
+                <div class="border-t border-gray-200 pt-4 mb-4">
                     <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">Статистика за месяц</h4>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -372,6 +359,12 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Кнопка выхода -->
+                <button id="logout-btn" class="w-full btn-spring bg-red-50 hover:bg-red-100 text-[#E31E24] font-bold py-3 px-6 rounded-2xl border-2 border-[#E31E24]">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Выйти из аккаунта
+                </button>
             </div>
         </div>
         
@@ -380,15 +373,15 @@
     <!-- Bottom Navigation -->
     <nav class="glass-effect fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 shadow-2xl">
         <div class="flex justify-around items-center py-3 px-4">
-            <button class="tab-btn tab-active flex flex-col items-center py-2 px-4 transition-colors" data-tab="tasks">
+            <button class="tab-btn tab-active btn-spring flex flex-col items-center py-2 px-4" data-tab="tasks">
                 <i class="fas fa-tasks text-2xl mb-1"></i>
                 <span class="text-xs font-semibold">Задачи</span>
             </button>
-            <button class="tab-btn tab-inactive flex flex-col items-center py-2 px-4 transition-colors" data-tab="shift">
+            <button class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4" data-tab="shift">
                 <i class="fas fa-cash-register text-2xl mb-1"></i>
                 <span class="text-xs font-semibold">Смена</span>
             </button>
-            <button class="tab-btn tab-inactive flex flex-col items-center py-2 px-4 transition-colors" data-tab="profile">
+            <button class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4" data-tab="profile">
                 <i class="fas fa-user text-2xl mb-1"></i>
                 <span class="text-xs font-semibold">Профиль</span>
             </button>
@@ -404,12 +397,11 @@
         // ============================================
         
         const API_URL = 'https://script.google.com/macros/s/AKfycbwlCBwr3Ei8zpN7PcVDGuXBolYoz9jAPTmopaUKUL8Dg6MpLnWTYWFLw5h8FAJdy2lAsg/exec';
-        const USE_CORS_PROXY = false; // Отключаем CORS proxy
-        const CORS_PROXY = 'https://corsproxy.io/?';
+        const USE_CORS_PROXY = false;
         
         let totalEarnings = 0;
         let completedCards = 0;
-        let totalCards = 3;
+        let totalCards = 0;
         let currentTab = 'tasks';
         let pinCode = '';
         let pendingAction = null;
@@ -422,11 +414,7 @@
         
         async function apiCall(action, params = {}) {
             try {
-                // Формируем URL с прокси если нужно
-                const targetUrl = USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(API_URL) : API_URL;
-                
-                // Шлем POST-запрос. ВАЖНО: Content-Type строго text/plain, чтобы избежать CORS preflight!
-                const response = await fetch(targetUrl, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action, ...params })
@@ -445,21 +433,61 @@
         }
 
         // ============================================
-        // PIN AUTHENTICATION
+        // SESSION STORAGE & AUTO-LOGIN
+        // ============================================
+        
+        function saveUserSession(user) {
+            localStorage.setItem('zavkhoz_user', JSON.stringify(user));
+        }
+        
+        function getUserSession() {
+            const data = localStorage.getItem('zavkhoz_user');
+            return data ? JSON.parse(data) : null;
+        }
+        
+        function clearUserSession() {
+            localStorage.removeItem('zavkhoz_user');
+        }
+
+        // ============================================
+        // ИНИЦИАЛИЗАЦИЯ
         // ============================================
 
-        // Ждем загрузки DOM перед инициализацией
         document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
+            console.log('🚀 Zavkhoz OS PWA инициализирован');
+            
+            // Проверяем сохраненную сессию
+            const savedUser = getUserSession();
+            if (savedUser) {
+                console.log('Найдена сохраненная сессия:', savedUser);
+                currentUser = savedUser;
+                hideAuthScreen();
+                initializeApp();
+            } else {
+                initializePinAuth();
+            }
+            
+            // Регистрация Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker зарегистрирован', reg))
+                    .catch(err => console.log('Service Worker ошибка', err));
+            }
         });
 
         function initializeApp() {
-            console.log('🚀 Zavkhoz OS инициализирован');
-            
-            // Обработчики PIN-кода
+            initializeTabSwitching();
+            initializeReasonModal();
+            initializeShiftModal();
+            initializeRevenueProgress();
+            initializeLogout();
+            updateUIWithUser();
+            loadTasks();
+        }
+
+        function initializePinAuth() {
             document.querySelectorAll('.numpad-btn[data-num]').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    console.log('Нажата кнопка:', this.dataset.num);
                     if (pinCode.length < 4) {
                         pinCode += this.dataset.num;
                         updatePinDots();
@@ -472,28 +500,21 @@
             });
 
             document.getElementById('pin-clear-btn').addEventListener('click', function() {
-                console.log('Нажата кнопка очистки');
                 pinCode = pinCode.slice(0, -1);
                 updatePinDots();
                 document.getElementById('pin-error').textContent = '';
             });
-            
-            // Инициализация остальных обработчиков
-            initializeTabSwitching();
-            initializeReasonModal();
-            initializeShiftModal();
-            initializeRevenueProgress();
         }
 
         function updatePinDots() {
             for (let i = 1; i <= 4; i++) {
                 const dot = document.getElementById('pin-dot-' + i);
                 if (i <= pinCode.length) {
-                    dot.classList.remove('bg-white/30');
-                    dot.classList.add('bg-white', 'scale-110');
+                    dot.classList.remove('bg-gray-300');
+                    dot.classList.add('bg-[#E31E24]', 'scale-110');
                 } else {
-                    dot.classList.remove('bg-white', 'scale-110');
-                    dot.classList.add('bg-white/30');
+                    dot.classList.remove('bg-[#E31E24]', 'scale-110');
+                    dot.classList.add('bg-gray-300');
                 }
             }
         }
@@ -503,36 +524,18 @@
             
             if (result.success) {
                 currentUser = result.user;
+                saveUserSession(currentUser);
                 
-                // Обновляем UI с данными пользователя
-                document.querySelector('header h1').textContent = 'Zavkhoz OS';
-                document.querySelector('header p').textContent = currentUser.store;
-                document.querySelectorAll('.w-11.h-11').forEach(el => {
-                    el.textContent = currentUser.name.split(' ').map(n => n[0]).join('');
-                });
-                
-                // ЗАДАЧА 2: Загружаем профиль и обновляем totalEarnings
+                // Загружаем профиль
                 const profileResult = await apiCall('getProfile', { userId: currentUser.userId });
                 if (profileResult.success && profileResult.profile) {
                     totalEarnings = profileResult.profile.totalBonus || 0;
-                    updateEarnings(0); // Обновляем UI без добавления бонуса
-                    
-                    // Сохраняем профиль для использования во вкладке "Профиль"
+                    updateEarnings(0);
                     currentUser.profile = profileResult.profile;
-                    
-                    // Обновляем вкладку "Профиль" с реальными данными
-                    updateProfileTab();
                 }
                 
-                // Скрываем экран авторизации
-                const authScreen = document.getElementById('pin-auth-screen');
-                authScreen.classList.add('slide-up-out');
-                setTimeout(() => {
-                    authScreen.style.display = 'none';
-                }, 600);
-                
-                // Загружаем задачи
-                await loadTasks();
+                hideAuthScreen();
+                initializeApp();
                 
             } else {
                 document.getElementById('pin-error').textContent = result.error || 'Неверный PIN-код';
@@ -544,6 +547,37 @@
             }
         }
 
+        function hideAuthScreen() {
+            const authScreen = document.getElementById('pin-auth-screen');
+            authScreen.style.transition = 'opacity 0.6s ease-out';
+            authScreen.style.opacity = '0';
+            setTimeout(() => {
+                authScreen.style.display = 'none';
+            }, 600);
+        }
+
+        function updateUIWithUser() {
+            if (!currentUser) return;
+            
+            const initials = currentUser.name.split(' ').map(n => n[0]).join('');
+            document.getElementById('user-avatar').textContent = initials;
+            document.getElementById('profile-avatar').textContent = initials;
+            document.getElementById('profile-name').textContent = currentUser.name;
+            document.getElementById('profile-store').textContent = currentUser.store;
+            document.getElementById('store-name').textContent = currentUser.store;
+            
+            updateProfileTab();
+        }
+
+        function initializeLogout() {
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                if (confirm('Вы уверены что хотите выйти?')) {
+                    clearUserSession();
+                    location.reload();
+                }
+            });
+        }
+
         // ============================================
         // ЗАГРУЗКА ЗАДАЧ
         // ============================================
@@ -551,12 +585,19 @@
         async function loadTasks() {
             if (!currentUser) return;
             
+            // Показываем скелетоны
+            document.getElementById('loading-skeleton').classList.remove('hidden');
+            document.getElementById('products-container').classList.add('hidden');
+            
             console.log('Загрузка задач для:', currentUser);
             
             const result = await apiCall('getTasks', {
                 userId: currentUser.userId,
                 store: currentUser.store
             });
+            
+            // Скрываем скелетоны
+            document.getElementById('loading-skeleton').classList.add('hidden');
             
             console.log('Результат загрузки задач:', result);
             
@@ -577,6 +618,7 @@
             const completionMsg = document.getElementById('completion-message');
             
             container.innerHTML = '';
+            container.classList.remove('hidden');
             noTasksMsg.classList.add('hidden');
             completionMsg.classList.add('hidden');
             
@@ -588,7 +630,6 @@
             }
             
             tasksData.forEach((task, index) => {
-                console.log('Создание карточки для задачи:', task);
                 const card = createTaskCard(task, index);
                 container.appendChild(card);
             });
@@ -596,12 +637,12 @@
         
         function createTaskCard(task, index) {
             const card = document.createElement('div');
-            card.className = 'product-card bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100';
+            card.className = 'product-card bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 fade-in';
             card.dataset.taskId = task.id;
             
             let html = '';
             
-            // Photo section - Base64 изображение
+            // Photo section
             if (task.hasPhoto && task.photoBase64) {
                 html += '<img src="' + task.photoBase64 + '" alt="' + task.name + '" class="w-full h-52 object-cover" onerror="this.outerHTML=&quot;<div class=&quot;photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center&quot;><i class=&quot;fas fa-exclamation-triangle text-amber-500 text-5xl mb-3&quot;></i><p class=&quot;text-gray-500 font-semibold&quot;>Ошибка загрузки фото</p></div>&quot;">';
             } else {
@@ -614,20 +655,19 @@
             // Content section
             html += '<div class="p-5">';
             html += '<div class="text-xs text-gray-500 mb-1 font-medium">Артикул: ' + task.artikul + '</div>';
-            html += '<h3 class="text-lg font-bold text-gray-900 mb-2">' + task.name + '</h3>';
-            html += '<div class="text-2xl font-bold text-blue-600 mb-4">' + Math.round(task.price).toLocaleString('ru-RU') + ' ₽</div>';
+            html += '<h3 class="text-lg font-bold text-gray-800 mb-2">' + task.name + '</h3>';
+            html += '<div class="text-2xl font-bold text-[#E31E24] mb-4">' + Math.round(task.price).toLocaleString('ru-RU') + ' ₽</div>';
             
             // Quantity input
             html += '<div class="mb-4">';
             html += '<label class="block text-sm font-semibold text-gray-700 mb-2">Факт. остаток (шт)</label>';
-            html += '<input type="number" class="qty-input w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors" placeholder="' + task.qty + '" value="' + task.qty + '" min="0">';
+            html += '<input type="number" class="qty-input w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none transition-all" placeholder="' + task.qty + '" value="' + task.qty + '" min="0">';
             html += '</div>';
             
-            // Photo button or action buttons - Base64 проверка
+            // Photo button or action buttons
             if (!task.hasPhoto || !task.photoBase64) {
                 html += '<div class="photo-button-container mb-4">';
-                html += '<button class="photo-btn w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-5 px-6 rounded-2xl text-lg transition-all shadow-xl hover:shadow-2xl relative overflow-hidden">';
-                html += '<span class="absolute inset-0 bg-blue-400 opacity-50 pulse-ring rounded-2xl"></span>';
+                html += '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden">';
                 html += '<i class="fas fa-camera text-2xl mr-3"></i>';
                 html += 'Сфотографировать для каталога';
                 html += '<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div>';
@@ -638,16 +678,16 @@
                 html += '<div class="action-buttons grid grid-cols-3 gap-2">';
             }
             
-            // Action buttons - Base64 проверка
+            // Action buttons
             const hasPhotoForActions = task.hasPhoto && task.photoBase64;
             const disabledAttr = !hasPhotoForActions ? ' disabled' : '';
-            html += '<button class="action-btn bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-2 rounded-xl text-sm transition-all shadow-md hover:shadow-lg" data-action="discount"' + disabledAttr + '>';
+            html += '<button class="action-btn btn-spring bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-2 rounded-xl text-sm shadow-md" data-action="discount"' + disabledAttr + '>';
             html += '<i class="fas fa-tag mr-1"></i>Уценить';
             html += '</button>';
-            html += '<button class="action-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-2 rounded-xl text-sm transition-all shadow-md hover:shadow-lg" data-action="writeoff"' + disabledAttr + '>';
+            html += '<button class="action-btn btn-spring bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-2 rounded-xl text-sm shadow-md" data-action="writeoff"' + disabledAttr + '>';
             html += '<i class="fas fa-trash mr-1"></i>Списать';
             html += '</button>';
-            html += '<button class="action-btn bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-2 rounded-xl text-sm transition-all shadow-md hover:shadow-lg" data-action="sell"' + disabledAttr + '>';
+            html += '<button class="action-btn btn-spring bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-2 rounded-xl text-sm shadow-md" data-action="sell"' + disabledAttr + '>';
             html += '<i class="fas fa-check mr-1"></i>Продать<br><span class="text-xs">+50 ₽</span>';
             html += '</button>';
             html += '</div>';
@@ -689,9 +729,9 @@
         // Toast Notification
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-blue-600';
+            const bgColor = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600';
             toast.className = 'toast ' + bgColor + ' text-white px-6 py-4 rounded-2xl shadow-2xl text-center font-semibold border border-white/20';
-            toast.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + message;
+            toast.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle') + ' mr-2"></i>' + message;
             
             const container = document.getElementById('toast-container');
             container.appendChild(toast);
@@ -710,8 +750,8 @@
             earningsEl.textContent = totalEarnings.toLocaleString('ru-RU') + ' ₽';
             
             if (amount > 0) {
-                earningsEl.classList.add('pulse-animation');
-                setTimeout(() => earningsEl.classList.remove('pulse-animation'), 1000);
+                earningsEl.style.transform = 'scale(1.1)';
+                setTimeout(() => earningsEl.style.transform = 'scale(1)', 200);
             }
         }
 
@@ -746,7 +786,6 @@
             });
         }
         
-        // Reason Modal
         function showReasonModal(action, button, card) {
             const modal = document.getElementById('reason-modal');
             modal.classList.remove('hidden');
@@ -771,7 +810,9 @@
             
             await new Promise(resolve => setTimeout(resolve, 1500));
             
-            card.classList.add('fade-out');
+            card.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(-20px)';
             
             setTimeout(() => {
                 card.style.display = 'none';
@@ -792,10 +833,9 @@
         }
 
         // ============================================
-        // CAMERA & PHOTO UPLOAD
+        // CAMERA & PHOTO UPLOAD (МГНОВЕННЫЙ РЕНДЕР)
         // ============================================
         
-        // Сжатие изображения
         function compressImage(file, maxWidth, quality) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -808,7 +848,6 @@
                         let width = img.width;
                         let height = img.height;
                         
-                        // Масштабируем если нужно
                         if (width > maxWidth) {
                             height = (height * maxWidth) / width;
                             width = maxWidth;
@@ -820,13 +859,10 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Конвертируем в JPEG с заданным качеством
                         const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                        
-                        // Убираем префикс data:image/jpeg;base64,
                         const base64 = dataUrl.split(',')[1];
                         
-                        resolve(base64);
+                        resolve({ base64, dataUrl });
                     };
                     
                     img.onerror = reject;
@@ -838,12 +874,10 @@
             });
         }
         
-        // Обработчик выбора фото
         document.getElementById('cameraInput').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
             
-            // Находим активную кнопку фото
             const activePhotoBtn = document.querySelector('.photo-btn:not([disabled])');
             if (!activePhotoBtn) return;
             
@@ -851,16 +885,22 @@
             const taskId = card.dataset.taskId;
             
             try {
-                // Показываем лоадер
-                activePhotoBtn.disabled = true;
-                activePhotoBtn.innerHTML = '<div class="spinner mx-auto"></div><div class="mt-2">Сжатие фото...</div>';
+                // МГНОВЕННЫЙ РЕНДЕР: Сжимаем и показываем фото ДО отправки на сервер
+                const { base64, dataUrl } = await compressImage(file, 800, 0.7);
                 
-                // Сжимаем изображение
-                const base64 = await compressImage(file, 800, 0.7);
+                // Заменяем placeholder на изображение
+                const photoContainer = card.querySelector('.photo-placeholder');
+                if (photoContainer) {
+                    photoContainer.outerHTML = '<div class="relative"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-52 object-cover"><div class="absolute inset-0 bg-black/30 flex items-center justify-center"><div class="spinner"></div></div></div>';
+                }
                 
-                activePhotoBtn.innerHTML = '<div class="spinner mx-auto"></div><div class="mt-2">Загрузка...</div>';
+                // Скрываем кнопку фото
+                const photoButtonContainer = card.querySelector('.photo-button-container');
+                if (photoButtonContainer) {
+                    photoButtonContainer.style.display = 'none';
+                }
                 
-                // Отправляем на сервер
+                // В ФОНЕ отправляем на сервер
                 const result = await apiCall('uploadPhoto', {
                     userId: currentUser.userId,
                     taskId: taskId,
@@ -869,21 +909,23 @@
                     name: card.querySelector('h3').textContent
                 });
                 
+                // Убираем лоадер
+                const loaderOverlay = card.querySelector('.absolute.inset-0');
+                if (loaderOverlay) {
+                    loaderOverlay.remove();
+                }
+                
                 if (result.success) {
-                    // Обновляем карточку с Base64 изображением
-                    const photoContainer = card.querySelector('.photo-placeholder');
-                    if (photoContainer && result.photoBase64) {
-                        // Используем Base64 из ответа сервера с обработкой ошибок
-                        photoContainer.outerHTML = '<img src="' + result.photoBase64 + '" alt="Фото товара" class="w-full h-52 object-cover" onerror="this.outerHTML=&quot;<div class=&quot;photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center&quot;><i class=&quot;fas fa-exclamation-triangle text-amber-500 text-5xl mb-3&quot;></i><p class=&quot;text-gray-500 font-semibold&quot;>Ошибка загрузки фото</p></div>&quot;">';
-                    } else if (photoContainer) {
-                        // Если Base64 не пришел, оставляем заглушку с сообщением об успехе
-                        photoContainer.innerHTML = '<i class="fas fa-check-circle text-emerald-500 text-5xl mb-3"></i><p class="text-gray-500 font-semibold">Фото загружено на сервер</p>';
-                    }
-                    
-                    // Скрываем кнопку фото
-                    const photoButtonContainer = card.querySelector('.photo-button-container');
-                    if (photoButtonContainer) {
-                        photoButtonContainer.style.display = 'none';
+                    // Показываем зеленую галочку успеха
+                    const imgElement = card.querySelector('img');
+                    if (imgElement) {
+                        const successBadge = document.createElement('div');
+                        successBadge.className = 'absolute top-2 right-2 bg-emerald-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg';
+                        successBadge.innerHTML = '<i class="fas fa-check text-xl"></i>';
+                        imgElement.parentElement.classList.add('relative');
+                        imgElement.parentElement.appendChild(successBadge);
+                        
+                        setTimeout(() => successBadge.remove(), 2000);
                     }
                     
                     // Разблокируем кнопки действий
@@ -895,7 +937,6 @@
                         });
                     }
                     
-                    // Обновляем заработок
                     updateEarnings(result.bonus || 10);
                     showToast('Товар успешно оцифрован! +' + (result.bonus || 10) + ' ₽', 'success');
                 } else {
@@ -907,19 +948,24 @@
                 showToast('Ошибка загрузки фото: ' + error.message, 'error');
                 
                 // Восстанавливаем кнопку
-                activePhotoBtn.disabled = false;
-                activePhotoBtn.innerHTML = '<span class="absolute inset-0 bg-blue-400 opacity-50 pulse-ring rounded-2xl"></span><i class="fas fa-camera text-2xl mr-3"></i>Сфотографировать для каталога<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div>';
+                const photoContainer = card.querySelector('.relative');
+                if (photoContainer) {
+                    photoContainer.outerHTML = '<div class="photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center"><i class="fas fa-exclamation-triangle text-amber-500 text-5xl mb-3"></i><p class="text-gray-500 font-semibold">Ошибка загрузки</p></div>';
+                }
+                
+                const photoButtonContainer = card.querySelector('.photo-button-container');
+                if (photoButtonContainer) {
+                    photoButtonContainer.style.display = 'block';
+                }
             }
             
-            // Очищаем input
             e.target.value = '';
         });
         
-        // Обработчик клика на кнопку фото (делегирование)
+        // Обработчик клика на кнопку фото
         document.addEventListener('click', function(e) {
             const photoBtn = e.target.closest('.photo-btn');
             if (photoBtn && !photoBtn.disabled) {
-                // Открываем камеру
                 document.getElementById('cameraInput').click();
             }
         });
@@ -928,16 +974,12 @@
         // ACTION BUTTONS
         // ============================================
 
-        // Photo Button Handler (УДАЛЕНО - теперь используется делегирование выше)
-
-        // Action Buttons Handler
         document.addEventListener('click', async function(e) {
             if (e.target.closest('.action-btn') && !e.target.closest('.action-btn').disabled) {
                 const button = e.target.closest('.action-btn');
                 const action = button.dataset.action;
                 const card = button.closest('.product-card');
                 
-                // Show reason modal for discount and writeoff
                 if (action === 'discount' || action === 'writeoff') {
                     showReasonModal(action, button, card);
                 } else {
@@ -975,18 +1017,15 @@
             }
         }
         
-        // ЗАДАЧА 2: Обновление вкладки "Профиль" с реальными данными
         function updateProfileTab() {
             if (!currentUser || !currentUser.profile) return;
             
             const profile = currentUser.profile;
             
-            // Обновляем статистику
             document.getElementById('profile-digitized').textContent = profile.digitizedCount || 0;
             document.getElementById('profile-bonus').textContent = (profile.totalBonus || 0).toLocaleString('ru-RU') + ' ₽';
             document.getElementById('profile-plan').textContent = (profile.planCompletion || 0) + '%';
             
-            // Обновляем UDS данные
             const udsConnected = profile.udsConnected || 0;
             const udsBonus = profile.udsBonus || 0;
             document.getElementById('profile-uds-connected').textContent = udsConnected + ' клиент' + (udsConnected === 1 ? '' : udsConnected > 1 && udsConnected < 5 ? 'а' : 'ов');
@@ -1013,13 +1052,11 @@
                 submitShiftBtn.disabled = true;
                 submitShiftBtn.innerHTML = '<div class="spinner mx-auto"></div><span class="ml-2">Отправка отчета...</span>';
                 
-                // Собираем данные смены
                 const revenue = parseFloat(document.getElementById('revenue-input').value) || 0;
                 const checksCount = parseInt(document.getElementById('checks-count-input').value) || 0;
                 const returnsAmount = parseFloat(document.getElementById('returns-amount-input').value) || 0;
                 const udsConnected = parseInt(document.getElementById('uds-connected-input').value) || 0;
                 
-                // Отправляем на сервер
                 const result = await apiCall('submitShift', {
                     userId: currentUser.userId,
                     revenue: revenue,
@@ -1034,14 +1071,12 @@
                 if (result.success) {
                     showToast('Отчет успешно отправлен руководителю!', 'success');
                     
-                    // Очищаем поля
                     document.getElementById('revenue-input').value = '';
                     document.getElementById('checks-count-input').value = '';
                     document.getElementById('returns-amount-input').value = '';
                     document.getElementById('uds-connected-input').value = '';
                     document.getElementById('revenue-progress').style.width = '0%';
                     
-                    // Обновляем профиль
                     const profileResult = await apiCall('getProfile', { userId: currentUser.userId });
                     if (profileResult.success && profileResult.profile) {
                         currentUser.profile = profileResult.profile;
