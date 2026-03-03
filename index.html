@@ -123,6 +123,10 @@
                     <div id="pin-dot-3" class="w-4 h-4 rounded-full bg-gray-300 transition-all"></div>
                     <div id="pin-dot-4" class="w-4 h-4 rounded-full bg-gray-300 transition-all"></div>
                 </div>
+                <div id="pin-loading" class="hidden flex justify-center items-center mb-2">
+                    <div class="spinner"></div>
+                    <span class="ml-3 text-gray-600 text-sm">Проверка...</span>
+                </div>
                 <p id="pin-error" class="text-red-500 text-sm h-5"></p>
             </div>
             
@@ -520,7 +524,24 @@
         }
 
         async function checkPin() {
+            // Показываем индикатор загрузки
+            const loadingEl = document.getElementById('pin-loading');
+            const errorEl = document.getElementById('pin-error');
+            const numpadButtons = document.querySelectorAll('button[data-num], #pin-clear-btn');
+            
+            loadingEl.classList.remove('hidden');
+            errorEl.textContent = '';
+            
+            // Блокируем кнопки во время проверки
+            numpadButtons.forEach(btn => btn.disabled = true);
+            
             const result = await apiCall('auth', { pin: pinCode });
+            
+            // Скрываем индикатор загрузки
+            loadingEl.classList.add('hidden');
+            
+            // Разблокируем кнопки
+            numpadButtons.forEach(btn => btn.disabled = false);
             
             if (result.success) {
                 currentUser = result.user;
@@ -538,7 +559,7 @@
                 initializeApp();
                 
             } else {
-                document.getElementById('pin-error').textContent = result.error || 'Неверный PIN-код';
+                errorEl.textContent = result.error || 'Неверный PIN-код';
                 const dotsContainer = document.querySelector('#pin-auth-screen .flex.justify-center');
                 dotsContainer.classList.add('shake');
                 setTimeout(() => dotsContainer.classList.remove('shake'), 400);
@@ -644,9 +665,11 @@
             
             // Photo section
             if (task.hasPhoto && task.photoBase64) {
-                html += '<img src="' + task.photoBase64 + '" alt="' + task.name + '" class="w-full h-52 object-cover" onerror="this.outerHTML=&quot;<div class=&quot;photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center&quot;><i class=&quot;fas fa-exclamation-triangle text-amber-500 text-5xl mb-3&quot;></i><p class=&quot;text-gray-500 font-semibold&quot;>Ошибка загрузки фото</p></div>&quot;">';
+                html += '<div class="w-full aspect-square bg-gray-100">';
+                html += '<img src="' + task.photoBase64 + '" alt="' + task.name + '" class="w-full h-full object-contain" onerror="this.outerHTML=&quot;<div class=&quot;photo-placeholder w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center&quot;><i class=&quot;fas fa-exclamation-triangle text-amber-500 text-5xl mb-3&quot;></i><p class=&quot;text-gray-500 font-semibold&quot;>Ошибка загрузки фото</p></div>&quot;">';
+                html += '</div>';
             } else {
-                html += '<div class="photo-placeholder w-full h-52 bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center">';
+                html += '<div class="photo-placeholder w-full aspect-square bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center">';
                 html += '<i class="fas fa-image text-gray-400 text-5xl mb-3"></i>';
                 html += '<p class="text-gray-500 font-semibold">Фото отсутствует в базе</p>';
                 html += '</div>';
