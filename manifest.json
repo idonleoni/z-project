@@ -2,12 +2,18 @@
   "name": "Zavkhoz OS",
   "short_name": "Zavkhoz",
   "description": "Система управления задачами для сотрудников Завхоз",
-  "start_url": "./",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#F5F4F0",
   "theme_color": "#E31E24",
   "orientation": "portrait",
   "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
     {
       "src": "logo.jpg",
       "sizes": "192x192",
@@ -18,5 +24,8 @@
       "sizes": "512x512",
       "type": "image/jpeg"
     }
-  ]
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "ru",
+  "dir": "ltr"
 }
