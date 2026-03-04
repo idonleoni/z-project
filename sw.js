@@ -1,16 +1,15 @@
 // Service Worker для Zavkhoz OS PWA
-const CACHE_NAME = 'zavkhoz-v3';
+const CACHE_NAME = 'zavkhoz-v5';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  './logo.jpg'
 ];
 
 // Установка Service Worker
 self.addEventListener('install', event => {
-  console.log('[SW] Установка Service Worker v3');
+  console.log('[SW] Установка Service Worker v5');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
