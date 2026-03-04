@@ -1,10 +1,10 @@
 // Service Worker для Zavkhoz OS PWA
-const CACHE_NAME = 'zavkhoz-v5';
+const CACHE_NAME = 'zavkhoz-v6';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './logo.jpg'
+  './icon.svg'
 ];
 
 // Установка Service Worker

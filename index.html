@@ -16,11 +16,8 @@
     <meta name="apple-mobile-web-app-title" content="Zavkhoz">
     
     <!-- Icons -->
-    <link rel="icon" type="image/png" href="https://via.placeholder.com/32x32/E31E24/FFFFFF?text=Z">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/180x180/E31E24/FFFFFF?text=Z">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://via.placeholder.com/152x152/E31E24/FFFFFF?text=Z">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://via.placeholder.com/180x180/E31E24/FFFFFF?text=Z">
-    <link rel="apple-touch-icon" sizes="167x167" href="https://via.placeholder.com/167x167/E31E24/FFFFFF?text=Z">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <link rel="apple-touch-icon" href="./icon.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -116,6 +113,23 @@
 </head>
 <body class="min-h-screen pb-20">
     
+    <!-- PWA Install Banner -->
+    <div id="install-banner" class="hidden fixed top-0 left-0 right-0 z-[100] bg-[#E31E24] text-white p-4 shadow-lg flex justify-between items-center transition-transform transform -translate-y-full">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                <i class="fas fa-download text-[#E31E24] text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-sm">Установить Zavkhoz OS</h3>
+                <p class="text-xs opacity-90">Добавить на главный экран</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button id="install-btn" class="bg-white text-[#E31E24] px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">Установить</button>
+            <button id="close-install-btn" class="text-white opacity-80 px-2 py-1.5"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
     <!-- PIN Auth Screen -->
     <div id="pin-auth-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center">
         <div class="text-center px-6">
@@ -123,7 +137,7 @@
                 <div class="w-24 h-24 bg-white rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-6">
                     <i class="fas fa-lock text-[#E31E24] text-5xl"></i>
                 </div>
-                <img src="logo.jpg" alt="Zavkhoz" class="h-12 mx-auto mb-4" onerror="this.style.display='none'">
+                <img src="icon.svg" alt="Zavkhoz" class="h-12 mx-auto mb-4" onerror="this.style.display='none'">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Zavkhoz OS</h1>
                 <p class="text-gray-600 text-sm">Введите PIN-код для входа</p>
             </div>
@@ -221,7 +235,7 @@
         <div class="px-5 py-4">
             <div class="flex items-center justify-between mb-3">
                 <div>
-                    <img src="logo.jpg" alt="Zavkhoz" class="h-8 mb-1" onerror="this.outerHTML='<h1 class=&quot;text-lg font-bold text-gray-800&quot;>Zavkhoz OS</h1>'">
+                    <img src="icon.svg" alt="Zavkhoz" class="h-8 mb-1" onerror="this.outerHTML='<h1 class=&quot;text-lg font-bold text-gray-800&quot;>Zavkhoz OS</h1>'">
                     <p class="text-xs text-gray-500" id="store-name">Завхоз Привокзальная</p>
                 </div>
                 <div class="w-11 h-11 bg-gradient-to-br from-[#E31E24] to-[#c91a1f] rounded-2xl flex items-center justify-center text-white font-semibold shadow-lg" id="user-avatar">
@@ -528,19 +542,51 @@
             
             // Обработка события установки PWA
             let deferredPrompt;
+            const installBanner = document.getElementById('install-banner');
+            const installBtn = document.getElementById('install-btn');
+            const closeInstallBtn = document.getElementById('close-install-btn');
+
             window.addEventListener('beforeinstallprompt', (e) => {
                 console.log('💾 PWA готово к установке');
                 e.preventDefault();
                 deferredPrompt = e;
                 
-                // Можно показать кнопку установки
-                // showInstallButton();
+                // Показываем баннер установки с задержкой, чтобы не пугать сразу
+                setTimeout(() => {
+                    installBanner.classList.remove('hidden');
+                    // Небольшая задержка для анимации
+                    setTimeout(() => {
+                        installBanner.classList.remove('-translate-y-full');
+                    }, 50);
+                }, 3000);
             });
+
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`User response to the install prompt: ${outcome}`);
+                        deferredPrompt = null;
+                        installBanner.classList.add('-translate-y-full');
+                        setTimeout(() => installBanner.classList.add('hidden'), 300);
+                    }
+                });
+            }
+
+            if (closeInstallBtn) {
+                closeInstallBtn.addEventListener('click', () => {
+                    installBanner.classList.add('-translate-y-full');
+                    setTimeout(() => installBanner.classList.add('hidden'), 300);
+                });
+            }
             
             // Отслеживание успешной установки
             window.addEventListener('appinstalled', () => {
                 console.log('✅ PWA успешно установлено');
                 deferredPrompt = null;
+                installBanner.classList.add('-translate-y-full');
+                setTimeout(() => installBanner.classList.add('hidden'), 300);
             });
         });
 
