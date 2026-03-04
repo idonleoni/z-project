@@ -792,7 +792,10 @@
             html += '<div class="p-5">';
             html += '<div class="text-xs text-gray-500 mb-1 font-medium">Артикул: ' + task.artikul + '</div>';
             html += '<h3 class="text-lg font-bold text-gray-800 mb-2">' + task.name + '</h3>';
-            html += '<div class="text-2xl font-bold text-[#E31E24] mb-4">' + Math.round(task.price).toLocaleString('ru-RU') + ' ₽</div>';
+            html += '<div class="flex justify-between items-center mb-4">';
+            html += '<div class="text-2xl font-bold text-[#E31E24]">' + Math.round(task.price).toLocaleString('ru-RU') + ' ₽</div>';
+            html += '<div class="bg-gray-100 text-gray-700 font-bold px-3 py-1 rounded-lg text-sm border border-gray-200 shadow-inner">Остаток: ' + task.qty + ' шт.</div>';
+            html += '</div>';
             
             // Дней в неликвиде (если больше 0)
             if (task.daysNonLiquid > 0) {

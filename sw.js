@@ -1,9 +1,11 @@
-const CACHE_NAME = 'zavkhoz-pwa-v1';
+const CACHE_NAME = 'zavkhoz-pwa-v3';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './logo.jpg'
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 // Установка Service Worker и кэширование статики
@@ -11,7 +13,10 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        return cache.addAll(urlsToCache);
+        // Используем Promise.allSettled для кэширования, чтобы ошибка одного файла не ломала весь SW
+        return Promise.allSettled(
+          urlsToCache.map(url => cache.add(url).catch(err => console.log('Failed to cache:', url, err)))
+        );
       })
   );
   self.skipWaiting();
