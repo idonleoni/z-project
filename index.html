@@ -7,8 +7,20 @@
     <title>Zavkhoz OS</title>
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="logo.jpg">
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zavkhoz">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="https://via.placeholder.com/32x32/E31E24/FFFFFF?text=Z">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/180x180/E31E24/FFFFFF?text=Z">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://via.placeholder.com/152x152/E31E24/FFFFFF?text=Z">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://via.placeholder.com/180x180/E31E24/FFFFFF?text=Z">
+    <link rel="apple-touch-icon" sizes="167x167" href="https://via.placeholder.com/167x167/E31E24/FFFFFF?text=Z">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -155,33 +167,28 @@
     <!-- Скрытый input для камеры -->
     <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display: none;">
 
-    <!-- Modal: Reason Input -->
-    <div id="reason-modal" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
+    <!-- Modal: Receipt Input (НОВАЯ МОДАЛКА ДЛЯ ЧЕКА) -->
+    <div id="receipt-modal" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full fade-in">
             <div class="p-6">
                 <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-exclamation-circle text-amber-500 mr-3"></i>
-                    <span id="reason-modal-title">Укажите причину</span>
+                    <i class="fas fa-receipt text-emerald-500 mr-3"></i>
+                    Подтверждение продажи
                 </h3>
+                <p class="text-gray-600 mb-4">Пробейте неликвид в 1С и введите номер чека для начисления бонуса.</p>
                 
-                <!-- Поле количества -->
+                <!-- Поле номера чека -->
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Количество (шт)</label>
-                    <input id="action-qty-input" type="number" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none" placeholder="1" value="1" min="1">
-                </div>
-                
-                <!-- Поле причины -->
-                <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Причина</label>
-                    <textarea id="reason-input" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none resize-none" rows="3" placeholder="Например: брак, порвана коробка, истек срок..."></textarea>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Номер чека</label>
+                    <input id="receipt-input" type="text" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none" placeholder="Например: 12345" autofocus>
                 </div>
                 
                 <div class="flex gap-3">
-                    <button id="reason-cancel-btn" class="flex-1 btn-spring bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl">
+                    <button id="receipt-cancel-btn" class="flex-1 btn-spring bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl">
                         Отмена
                     </button>
-                    <button id="reason-confirm-btn" class="flex-1 btn-spring bg-[#E31E24] hover:bg-[#c91a1f] text-white font-semibold py-3 rounded-xl">
-                        Отправить заявку
+                    <button id="receipt-confirm-btn" class="flex-1 btn-spring bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl">
+                        Подтвердить
                     </button>
                 </div>
             </div>
@@ -313,7 +320,7 @@
                 
                 <button id="submit-shift-btn" class="w-full btn-spring bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">
                     <i class="fas fa-paper-plane mr-2"></i>
-                    Сдать смену и отправить отчет шефу
+                    Сдать смену и отправить отчет
                 </button>
             </div>
         </div>
@@ -420,7 +427,7 @@
         let totalCards = 0;
         let currentTab = 'tasks';
         let pinCode = '';
-        let pendingAction = null;
+        let pendingSale = null;
         let currentUser = null;
         let tasksData = [];
 
@@ -497,17 +504,49 @@
                 initializePinAuth();
             }
             
-            // Регистрация Service Worker
+            // Регистрация Service Worker с улучшенной обработкой
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker зарегистрирован', reg))
-                    .catch(err => console.log('Service Worker ошибка', err));
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .then(reg => {
+                        console.log('✅ Service Worker зарегистрирован', reg);
+                        
+                        // Проверяем обновления SW
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            console.log('🔄 Найдено обновление Service Worker');
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('✨ Новая версия доступна. Перезагрузите страницу.');
+                                    // Можно показать уведомление пользователю
+                                }
+                            });
+                        });
+                    })
+                    .catch(err => console.error('❌ Service Worker ошибка:', err));
             }
+            
+            // Обработка события установки PWA
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('💾 PWA готово к установке');
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Можно показать кнопку установки
+                // showInstallButton();
+            });
+            
+            // Отслеживание успешной установки
+            window.addEventListener('appinstalled', () => {
+                console.log('✅ PWA успешно установлено');
+                deferredPrompt = null;
+            });
         });
 
         function initializeApp() {
             initializeTabSwitching();
-            initializeReasonModal();
+            initializeReceiptModal();
             initializeShiftModal();
             initializeRevenueProgress();
             initializeLogout();
@@ -688,8 +727,6 @@
             card.dataset.taskId = task.id;
             card.dataset.artikul = task.artikul;
             card.dataset.name = task.name;
-            card.dataset.store = currentUser.store;
-            card.dataset.days = task.daysNonLiquid || 0; // ЗАДАЧА 3: Дней в неликвиде
             
             let html = '';
             
@@ -718,13 +755,7 @@
                 html += '</div>';
             }
             
-            // Quantity input
-            html += '<div class="mb-4">';
-            html += '<label class="block text-sm font-semibold text-gray-700 mb-2">Факт. остаток (шт)</label>';
-            html += '<input type="number" class="qty-input w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none transition-all" placeholder="' + task.qty + '" value="' + task.qty + '" min="0">';
-            html += '</div>';
-            
-            // ЗАДАЧА 4: Кнопка фото только если товар НЕ оцифрован
+            // ЗАДАЧА 1: Кнопка фото только если товар НЕ оцифрован
             if (!task.hasPhoto || !task.photoBase64) {
                 html += '<div class="photo-button-container mb-4">';
                 html += '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden">';
@@ -733,22 +764,17 @@
                 html += '<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div>';
                 html += '</button>';
                 html += '</div>';
-                html += '<div class="action-buttons grid grid-cols-3 gap-2 opacity-40 pointer-events-none">';
+                html += '<div class="action-buttons flex w-full opacity-40 pointer-events-none">';
             } else {
-                html += '<div class="action-buttons grid grid-cols-3 gap-2">';
+                html += '<div class="action-buttons flex w-full">';
             }
             
-            // Action buttons
+            // ЗАДАЧА 1: Только одна кнопка "Продать" на всю ширину
             const hasPhotoForActions = task.hasPhoto && task.photoBase64;
             const disabledAttr = !hasPhotoForActions ? ' disabled' : '';
-            html += '<button class="action-btn btn-spring bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-2 rounded-xl text-sm shadow-md" data-action="discount"' + disabledAttr + '>';
-            html += '<i class="fas fa-tag mr-1"></i>Запрос на уценку';
-            html += '</button>';
-            html += '<button class="action-btn btn-spring bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-2 rounded-xl text-sm shadow-md" data-action="writeoff"' + disabledAttr + '>';
-            html += '<i class="fas fa-trash mr-1"></i>Запрос на списание';
-            html += '</button>';
-            html += '<button class="action-btn btn-spring bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-2 rounded-xl text-sm shadow-md" data-action="sell"' + disabledAttr + '>';
-            html += '<i class="fas fa-check mr-1"></i>Продать<br><span class="text-xs">+50 ₽</span>';
+            html += '<button class="action-btn btn-spring bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg w-full" data-action="sell"' + disabledAttr + '>';
+            html += '<i class="fas fa-check-circle text-2xl mr-2"></i>Продать';
+            html += '<div class="text-sm mt-1">+50 ₽ бонус</div>';
             html += '</button>';
             html += '</div>';
             html += '</div>';
@@ -826,87 +852,63 @@
         // ============================================
         // REASON MODAL
         // ============================================
+        // RECEIPT MODAL (НОВАЯ ЛОГИКА ДЛЯ ЧЕКОВ)
+        // ============================================
         
-        function initializeReasonModal() {
-            document.getElementById('reason-cancel-btn').addEventListener('click', hideReasonModal);
+        function initializeReceiptModal() {
+            document.getElementById('receipt-cancel-btn').addEventListener('click', hideReceiptModal);
 
-            document.getElementById('reason-confirm-btn').addEventListener('click', async function() {
-                const reason = document.getElementById('reason-input').value.trim();
-                const qty = parseInt(document.getElementById('action-qty-input').value) || 1;
+            document.getElementById('receipt-confirm-btn').addEventListener('click', async function() {
+                const receipt = document.getElementById('receipt-input').value.trim();
                 
-                if (!reason) {
-                    showToast('Пожалуйста, укажите причину', 'error');
+                if (!receipt) {
+                    showToast('Пожалуйста, введите номер чека', 'error');
                     return;
                 }
                 
-                if (qty < 1) {
-                    showToast('Количество должно быть больше 0', 'error');
-                    return;
-                }
+                hideReceiptModal();
                 
-                hideReasonModal();
-                
-                if (pendingAction) {
-                    await executeAction(pendingAction.action, pendingAction.button, pendingAction.card, reason, qty);
+                if (pendingSale) {
+                    await executeAction('sell', pendingSale.button, pendingSale.card, receipt);
                 }
             });
         }
         
-        function showReasonModal(action, button, card) {
-            const modal = document.getElementById('reason-modal');
-            const modalTitle = document.getElementById('reason-modal-title');
-            
-            // Обновляем заголовок в зависимости от действия
-            if (action === 'discount') {
-                modalTitle.textContent = 'Запрос на уценку';
-            } else if (action === 'writeoff') {
-                modalTitle.textContent = 'Запрос на списание';
-            } else {
-                modalTitle.textContent = 'Укажите причину';
-            }
-            
+        function showReceiptModal(button, card) {
+            const modal = document.getElementById('receipt-modal');
             modal.classList.remove('hidden');
-            document.getElementById('reason-input').value = '';
-            document.getElementById('action-qty-input').value = '1';
-            document.getElementById('reason-input').focus();
+            document.getElementById('receipt-input').value = '';
+            document.getElementById('receipt-input').focus();
             
-            pendingAction = { action, button, card };
+            pendingSale = { button, card };
         }
 
-        function hideReasonModal() {
-            document.getElementById('reason-modal').classList.add('hidden');
-            pendingAction = null;
+        function hideReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+            pendingSale = null;
         }
 
-        // Execute Action
-        async function executeAction(action, button, card, reason = null, qty = 1) {
+        // Execute Action (УПРОЩЕННАЯ ВЕРСИЯ - ТОЛЬКО ПРОДАЖА)
+        async function executeAction(action, button, card, receipt) {
             const originalContent = button.innerHTML;
             
             button.disabled = true;
             button.classList.add('opacity-75', 'cursor-not-allowed');
             button.innerHTML = '<div class="spinner mx-auto"></div>';
             
-            // ЗАДАЧА 3: Извлекаем все данные из карточки для отправки на бэкенд
             const taskId = card.dataset.taskId;
             const artikul = card.dataset.artikul;
             const name = card.dataset.name;
-            const store = card.dataset.store;
-            const days = card.dataset.days;
             
-            // Для продажи берем количество из input, для остальных - из модалки
-            const finalQty = action === 'sell' ? parseFloat(card.querySelector('.qty-input').value) || 0 : qty;
-            
-            // Отправляем на бэкенд полный пакет данных
+            // Отправляем на бэкенд с номером чека
             const result = await apiCall('submitAction', {
                 userId: currentUser.userId,
                 taskId: taskId,
                 action: action,
-                reason: reason || '',
-                qty: finalQty,
+                receipt: receipt,
                 artikul: artikul,
                 name: name,
-                store: store,
-                daysNonLiquid: days
+                store: currentUser.store
             });
             
             if (result.success) {
@@ -1094,7 +1096,7 @@
         });
 
         // ============================================
-        // ACTION BUTTONS
+        // ACTION BUTTONS (УПРОЩЕННАЯ ЛОГИКА - ТОЛЬКО ПРОДАЖА)
         // ============================================
 
         document.addEventListener('click', async function(e) {
@@ -1103,10 +1105,9 @@
                 const action = button.dataset.action;
                 const card = button.closest('.product-card');
                 
-                if (action === 'discount' || action === 'writeoff') {
-                    showReasonModal(action, button, card);
-                } else {
-                    await executeAction(action, button, card);
+                // Только продажа - открываем модалку с чеком
+                if (action === 'sell') {
+                    showReceiptModal(button, card);
                 }
             }
         });
