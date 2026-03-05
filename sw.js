@@ -1,11 +1,9 @@
-const CACHE_NAME = 'zavkhoz-pwa-v3';
+const CACHE_NAME = 'zavkhoz-pwa-v4';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg',
-  './icon-192.png',
-  './icon-512.png'
+  './logo.png'
 ];
 
 // Установка Service Worker и кэширование статики
