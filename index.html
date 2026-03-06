@@ -16,8 +16,8 @@
     <meta name="apple-mobile-web-app-title" content="Zavkhoz">
     
     <!-- Icons -->
-    <link rel="icon" type="image/png" href="./logo.png">
-    <link rel="apple-touch-icon" href="./logo.png">
+    <link rel="icon" type="image/png" href="./logo.webp">
+    <link rel="apple-touch-icon" href="./logo.webp">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -137,7 +137,7 @@
                 <div class="w-24 h-24 bg-white rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-6">
                     <i class="fas fa-lock text-[#E31E24] text-5xl"></i>
                 </div>
-                <img src="logo.png" alt="Zavkhoz" class="h-12 w-12 aspect-square rounded-full object-cover shadow-sm mx-auto mb-4" onerror="this.style.display='none'">
+                <img src="logo.webp" alt="Zavkhoz" class="h-12 w-12 aspect-square rounded-full object-cover shadow-sm mx-auto mb-4" onerror="this.style.display='none'">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Zavkhoz OS</h1>
                 <p class="text-gray-600 text-sm">Введите PIN-код для входа</p>
             </div>
@@ -231,26 +231,23 @@
     </div>
     
     <!-- Sticky Header -->
-    <header class="glass-effect sticky top-0 z-20 shadow-sm border-b border-gray-200">
-        <div class="px-5 py-4">
-            <div class="flex justify-between items-center relative mb-3">
-                <img src="./logo.png" alt="Zavkhoz" class="h-10 w-10 aspect-square rounded-full object-cover shadow-lg contrast-110 border-2 border-white">
-                <div class="absolute left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800" id="store-name">
-                    Завхоз
-                </div>
-                <div class="w-11 h-11 bg-gradient-to-br from-[#E31E24] to-[#c91a1f] rounded-2xl flex items-center justify-center text-white font-semibold shadow-lg" id="user-avatar">
-                    ИИ
-                </div>
-            </div>
-            <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg">
-                <div class="text-xs opacity-90 font-medium">Заработано сегодня</div>
-                <div id="earnings" class="text-3xl font-bold mt-1">0 ₽</div>
-            </div>
+    <header class="sticky top-0 z-50 bg-[#F5F4F0]/90 backdrop-blur-md flex items-center justify-between px-5 py-3 border-b border-gray-200">
+        <img src="./logo.webp" alt="Zavkhoz" class="w-10 h-10 rounded-full object-cover shadow-sm">
+        <div class="absolute left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800" id="store-name">
+            Завхоз
+        </div>
+        <div class="w-11 h-11 bg-gradient-to-br from-[#E31E24] to-[#c91a1f] rounded-2xl flex items-center justify-center text-white font-semibold shadow-lg" id="user-avatar">
+            ИИ
         </div>
     </header>
 
     <!-- Main Content -->
     <main class="px-5 py-5 pb-24">
+        
+        <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg mb-6">
+            <div class="text-xs opacity-90 font-medium">Заработано сегодня</div>
+            <div id="earnings" class="text-3xl font-bold mt-1">0 ₽</div>
+        </div>
         
         <!-- Tab 1: Задачи -->
         <div id="tab-tasks" class="tab-content fade-in">
@@ -639,7 +636,9 @@
             const loadingEl = document.getElementById('pin-loading');
             const errorEl = document.getElementById('pin-error');
             const numpadButtons = document.querySelectorAll('button[data-num], #pin-clear-btn');
+            const dotsContainer = document.querySelector('#pin-auth-screen .flex.justify-center');
             
+            dotsContainer.classList.add('animate-pulse');
             loadingEl.classList.remove('hidden');
             errorEl.textContent = '';
             
@@ -649,6 +648,7 @@
             const result = await apiCall('auth', { pin: pinCode });
             
             // Скрываем индикатор загрузки
+            dotsContainer.classList.remove('animate-pulse');
             loadingEl.classList.add('hidden');
             
             // Разблокируем кнопки
@@ -769,7 +769,7 @@
         
         function createTaskCard(task, index) {
             const card = document.createElement('div');
-            card.className = 'product-card bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 fade-in';
+            card.className = 'product-card bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 fade-in';
             card.dataset.taskId = task.id;
             card.dataset.artikul = task.artikul;
             card.dataset.name = task.name;
@@ -794,7 +794,7 @@
             html += '<h3 class="text-lg font-bold text-gray-800 mb-2">' + task.name + '</h3>';
             html += '<div class="flex justify-between items-center mb-4">';
             html += '<div class="text-2xl font-bold text-[#E31E24]">' + Math.round(task.price).toLocaleString('ru-RU') + ' ₽</div>';
-            html += '<div class="bg-gray-100 text-gray-700 font-bold px-3 py-1 rounded-lg text-sm border border-gray-200 shadow-inner">Остаток: ' + task.qty + ' шт.</div>';
+            html += '<div class="flex items-center gap-2 text-sm text-gray-700 font-bold">Ост: <input type="number" id="qty-' + task.id + '" class="w-16 border border-gray-300 rounded-lg p-1 text-center font-semibold focus:ring-2 focus:ring-red-500 outline-none" value="' + task.qty + '"></div>';
             html += '</div>';
             
             // Дней в неликвиде (если больше 0)
@@ -807,7 +807,7 @@
             // ЗАДАЧА 1: Кнопка фото только если товар НЕ оцифрован
             if (!task.hasPhoto || !task.photoBase64) {
                 html += '<div class="photo-button-container mb-4">';
-                html += '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden">';
+                html += '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden active:scale-95 transition-transform">';
                 html += '<i class="fas fa-camera text-2xl mr-3"></i>';
                 html += 'Сфотографировать для каталога';
                 html += '<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div>';
@@ -821,11 +821,17 @@
             // ЗАДАЧА 1: Только одна кнопка "Продать" на всю ширину
             const hasPhotoForActions = task.hasPhoto && task.photoBase64;
             const disabledAttr = !hasPhotoForActions ? ' disabled' : '';
-            html += '<button class="action-btn btn-spring bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg w-full" data-action="sell"' + disabledAttr + '>';
+            html += '<button class="action-btn btn-spring bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg w-full active:scale-95 transition-transform" data-action="sell"' + disabledAttr + '>';
             html += '<i class="fas fa-check-circle text-2xl mr-2"></i>Продать';
             html += '<div class="text-sm mt-1">+50 ₽ бонус</div>';
             html += '</button>';
             html += '</div>';
+            
+            // Кнопка Переделать фото
+            if (task.status === 'Photo_Requested' || task.status === 'Pending_Approval' || task.status === 'На модерации') {
+                html += '<button class="redo-photo-btn w-full mt-2 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors btn-spring active:scale-95"><i class="fas fa-redo mr-2"></i>Переделать фото</button>';
+            }
+            
             html += '</div>';
             
             card.innerHTML = html;
@@ -1066,12 +1072,16 @@
                 }
                 
                 // В ФОНЕ отправляем на сервер
+                const qtyInput = document.getElementById('qty-' + taskId);
+                const actualQuantity = qtyInput ? qtyInput.value : '';
+
                 const result = await apiCall('uploadPhoto', {
                     userId: currentUser.userId,
                     taskId: taskId,
                     photoData: base64,
                     artikul: artikul,
-                    name: name
+                    name: name,
+                    actualQuantity: actualQuantity
                 });
                 
                 // Убираем лоадер
@@ -1134,6 +1144,45 @@
             }
             
             e.target.value = '';
+        });
+        
+        // Обработчик клика на кнопку "Переделать фото"
+        document.addEventListener('click', function(e) {
+            const redoBtn = e.target.closest('.redo-photo-btn');
+            if (redoBtn) {
+                const card = redoBtn.closest('.product-card');
+                
+                // Восстанавливаем placeholder
+                const photoContainer = card.querySelector('.w-full.aspect-square');
+                if (photoContainer) {
+                    photoContainer.outerHTML = '<div class="photo-placeholder w-full aspect-square bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center"><i class="fas fa-image text-gray-400 text-5xl mb-3"></i><p class="text-gray-500 font-semibold">Фото отсутствует в базе</p></div>';
+                }
+                
+                // Показываем кнопку фото
+                let photoButtonContainer = card.querySelector('.photo-button-container');
+                if (!photoButtonContainer) {
+                    const actionButtons = card.querySelector('.action-buttons');
+                    const newPhotoBtn = document.createElement('div');
+                    newPhotoBtn.className = 'photo-button-container mb-4';
+                    newPhotoBtn.innerHTML = '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden active:scale-95 transition-transform"><i class="fas fa-camera text-2xl mr-3"></i>Сфотографировать для каталога<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div></button>';
+                    actionButtons.parentNode.insertBefore(newPhotoBtn, actionButtons);
+                    
+                    actionButtons.classList.add('opacity-40', 'pointer-events-none');
+                    actionButtons.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                } else {
+                    photoButtonContainer.style.display = 'block';
+                    const activePhotoBtn = photoButtonContainer.querySelector('.photo-btn');
+                    if (activePhotoBtn) activePhotoBtn.disabled = false;
+                    
+                    const actionButtons = card.querySelector('.action-buttons');
+                    if (actionButtons) {
+                        actionButtons.classList.add('opacity-40', 'pointer-events-none');
+                        actionButtons.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                    }
+                }
+                
+                redoBtn.remove();
+            }
         });
         
         // Обработчик клика на кнопку фото

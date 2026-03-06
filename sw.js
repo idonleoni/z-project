@@ -3,7 +3,7 @@ const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './logo.png'
+  './logo.webp'
 ];
 
 // Установка Service Worker и кэширование статики
