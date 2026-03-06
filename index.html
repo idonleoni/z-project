@@ -794,7 +794,7 @@
             html += '<h3 class="text-lg font-bold text-gray-800 mb-2">' + task.name + '</h3>';
             html += '<div class="flex justify-between items-center mb-4">';
             html += '<div class="text-2xl font-bold text-[#E31E24]">' + Math.round(task.price).toLocaleString('ru-RU') + ' ₽</div>';
-            html += '<div class="flex items-center gap-2 text-sm text-gray-700 font-bold">Ост: <input type="number" id="qty-' + task.id + '" class="w-16 border border-gray-300 rounded-lg p-1 text-center font-semibold focus:ring-2 focus:ring-red-500 outline-none" value="' + task.qty + '"></div>';
+            html += '<div class="flex items-center gap-2 text-sm text-gray-700 font-bold">Ост: <input type="number" id="qty-' + task.id + '" class="w-16 border border-gray-300 rounded-lg p-1 text-center font-semibold focus:ring-2 focus:ring-red-500 outline-none" value="' + task.qty + '"><button class="qty-save-btn bg-gray-200 text-gray-700 w-8 h-8 rounded-lg hover:bg-gray-300 active:scale-95 transition-all flex items-center justify-center"><i class="fas fa-save"></i></button></div>';
             html += '</div>';
             
             // Дней в неликвиде (если больше 0)
@@ -992,6 +992,46 @@
             }
         }
 
+        // Обработчик обновления остатка
+        document.addEventListener('click', async function(e) {
+            const saveBtn = e.target.closest('.qty-save-btn');
+            if (saveBtn && !saveBtn.disabled) {
+                const card = saveBtn.closest('.product-card');
+                const taskId = card.dataset.taskId;
+                const qtyInput = document.getElementById('qty-' + taskId);
+                const newQty = qtyInput.value;
+                const artikul = card.dataset.artikul;
+                
+                const originalHtml = saveBtn.innerHTML;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<div class="spinner border-t-gray-600 w-4 h-4"></div>';
+                
+                try {
+                    const result = await apiCall('updateQuantity', {
+                        userId: currentUser.userId,
+                        taskId: taskId,
+                        artikul: artikul,
+                        quantity: newQty
+                    });
+                    
+                    if (result.success) {
+                        saveBtn.innerHTML = '<i class="fas fa-check text-emerald-600"></i>';
+                        showToast('Остаток успешно обновлен', 'success');
+                        setTimeout(() => {
+                            saveBtn.innerHTML = originalHtml;
+                            saveBtn.disabled = false;
+                        }, 2000);
+                    } else {
+                        throw new Error(result.error || 'Ошибка обновления');
+                    }
+                } catch (error) {
+                    saveBtn.innerHTML = originalHtml;
+                    saveBtn.disabled = false;
+                    showToast(error.message, 'error');
+                }
+            }
+        });
+
         // ============================================
         // CAMERA & PHOTO UPLOAD (МГНОВЕННЫЙ РЕНДЕР)
         // ============================================
@@ -1042,9 +1082,6 @@
             if (!activePhotoBtn) return;
             
             const card = activePhotoBtn.closest('.product-card');
-            const taskId = card.dataset.taskId;
-            const artikul = card.dataset.artikul;
-            const name = card.dataset.name;
             
             // АНТИ-АБУЗ: Проверяем, не заблокирована ли уже кнопка
             if (activePhotoBtn.disabled) {
@@ -1062,7 +1099,7 @@
                 // Заменяем placeholder на изображение
                 const photoContainer = card.querySelector('.photo-placeholder');
                 if (photoContainer) {
-                    photoContainer.outerHTML = '<div class="relative w-full aspect-square bg-gray-100"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-full object-contain"><div class="absolute inset-0 bg-black/30 flex items-center justify-center"><div class="spinner"></div><p class="text-white ml-3">Загрузка...</p></div></div>';
+                    photoContainer.outerHTML = '<div class="relative w-full aspect-square bg-gray-100 photo-preview-container"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-full object-contain"></div>';
                 }
                 
                 // Скрываем кнопку фото
@@ -1071,79 +1108,131 @@
                     photoButtonContainer.style.display = 'none';
                 }
                 
-                // В ФОНЕ отправляем на сервер
+                // Сохраняем base64
+                card.dataset.tempBase64 = base64;
+                
+                // Показываем кнопки "Переделать" и "Отправить"
+                let previewBtns = card.querySelector('.preview-buttons-container');
+                if (!previewBtns) {
+                    previewBtns = document.createElement('div');
+                    previewBtns.className = 'preview-buttons-container mb-4 flex gap-2 fade-in';
+                    previewBtns.innerHTML = `
+                        <button class="redo-temp-btn flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 rounded-2xl active:scale-95 transition-transform shadow-sm"><i class="fas fa-redo mr-2"></i>Переделать</button>
+                        <button class="upload-photo-btn flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition-transform"><i class="fas fa-paper-plane mr-2"></i>Отправить</button>
+                    `;
+                    
+                    const actionButtons = card.querySelector('.action-buttons');
+                    actionButtons.parentNode.insertBefore(previewBtns, actionButtons);
+                } else {
+                    previewBtns.style.display = 'flex';
+                }
+                
+                // Сбрасываем input
+                e.target.value = '';
+                
+            } catch (error) {
+                console.error('Photo compression error:', error);
+                showToast('Ошибка обработки фото', 'error');
+                activePhotoBtn.disabled = false;
+            }
+        });
+
+        // Обработчик кнопки "Переделать" (на этапе превью)
+        document.addEventListener('click', function(e) {
+            const redoBtn = e.target.closest('.redo-temp-btn');
+            if (redoBtn) {
+                const card = redoBtn.closest('.product-card');
+                
+                // Возвращаем плейсхолдер
+                const photoContainer = card.querySelector('.photo-preview-container');
+                if (photoContainer) {
+                    photoContainer.outerHTML = '<div class="photo-placeholder w-full aspect-square bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center"><i class="fas fa-camera text-gray-400 text-5xl mb-3"></i><p class="text-gray-500 font-semibold">Сделайте фото товара</p></div>';
+                }
+                
+                // Скрываем кнопки превью
+                card.querySelector('.preview-buttons-container').style.display = 'none';
+                
+                // Показываем кнопку "Сфотографировать"
+                const photoButtonContainer = card.querySelector('.photo-button-container');
+                if (photoButtonContainer) {
+                    photoButtonContainer.style.display = 'block';
+                    photoButtonContainer.querySelector('button').disabled = false;
+                }
+                
+                delete card.dataset.tempBase64;
+            }
+        });
+
+        // Обработчик кнопки "Отправить" (после превью)
+        document.addEventListener('click', async function(e) {
+            const uploadBtn = e.target.closest('.upload-photo-btn');
+            if (uploadBtn) {
+                const card = uploadBtn.closest('.product-card');
+                const taskId = card.dataset.taskId;
+                const artikul = card.dataset.artikul;
+                const name = card.dataset.name;
+                const base64 = card.dataset.tempBase64;
+                
+                if (!base64) return;
+                
+                const originalHtml = uploadBtn.innerHTML;
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<div class="spinner mx-auto w-6 h-6 border-white/50 border-t-white"></div>';
+                
+                const redoBtn = card.querySelector('.redo-temp-btn');
+                if (redoBtn) redoBtn.disabled = true;
+                
                 const qtyInput = document.getElementById('qty-' + taskId);
                 const actualQuantity = qtyInput ? qtyInput.value : '';
 
-                const result = await apiCall('uploadPhoto', {
-                    userId: currentUser.userId,
-                    taskId: taskId,
-                    photoData: base64,
-                    artikul: artikul,
-                    name: name,
-                    actualQuantity: actualQuantity
-                });
-                
-                // Убираем лоадер
-                const loaderOverlay = card.querySelector('.absolute.inset-0');
-                if (loaderOverlay) {
-                    loaderOverlay.remove();
-                }
-                
-                if (result.success) {
-                    // Показываем зеленую галочку успеха
-                    const imgElement = card.querySelector('img');
-                    if (imgElement) {
-                        const successBadge = document.createElement('div');
-                        successBadge.className = 'absolute top-2 right-2 bg-emerald-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg';
-                        successBadge.innerHTML = '<i class="fas fa-check text-xl"></i>';
-                        imgElement.parentElement.classList.add('relative');
-                        imgElement.parentElement.appendChild(successBadge);
+                try {
+                    const result = await apiCall('uploadPhoto', {
+                        userId: currentUser.userId,
+                        taskId: taskId,
+                        photoData: base64,
+                        artikul: artikul,
+                        name: name,
+                        actualQuantity: actualQuantity
+                    });
+                    
+                    if (result.success) {
+                        // Показываем галочку успеха
+                        const photoContainer = card.querySelector('.photo-preview-container');
+                        if (photoContainer) {
+                            const successBadge = document.createElement('div');
+                            successBadge.className = 'absolute top-2 right-2 bg-emerald-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg fade-in';
+                            successBadge.innerHTML = '<i class="fas fa-check text-xl"></i>';
+                            photoContainer.appendChild(successBadge);
+                        }
                         
-                        setTimeout(() => successBadge.remove(), 2000);
+                        // Скрываем превью кнопки
+                        card.querySelector('.preview-buttons-container').remove();
+                        
+                        // Разблокируем кнопки действий (Продать)
+                        const actionButtons = card.querySelector('.action-buttons');
+                        if (actionButtons) {
+                            actionButtons.classList.remove('opacity-40', 'pointer-events-none');
+                            actionButtons.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                        }
+                        
+                        updateEarnings(result.bonus || 10);
+                        showToast('Товар успешно оцифрован! +' + (result.bonus || 10) + ' ₽', 'success');
+                    } else {
+                        throw new Error(result.error || 'Ошибка загрузки фото');
                     }
+                } catch (error) {
+                    console.error('Photo upload error:', error);
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = originalHtml;
+                    if (redoBtn) redoBtn.disabled = false;
                     
-                    // Разблокируем кнопки действий
-                    const actionButtons = card.querySelector('.action-buttons');
-                    if (actionButtons) {
-                        actionButtons.classList.remove('opacity-40', 'pointer-events-none');
-                        actionButtons.querySelectorAll('button').forEach(btn => {
-                            btn.disabled = false;
-                        });
+                    if (error.message.includes('уже оцифровано')) {
+                        showToast('⚠️ ' + error.message, 'error');
+                    } else {
+                        showToast('Ошибка: ' + error.message, 'error');
                     }
-                    
-                    updateEarnings(result.bonus || 10);
-                    showToast('Товар успешно оцифрован! +' + (result.bonus || 10) + ' ₽', 'success');
-                } else {
-                    // АНТИ-АБУЗ: Показываем ошибку от сервера
-                    throw new Error(result.error || 'Ошибка загрузки фото');
-                }
-                
-            } catch (error) {
-                console.error('Photo upload error:', error);
-                
-                // Показываем понятное сообщение об ошибке
-                if (error.message.includes('уже оцифровано')) {
-                    showToast('⚠️ ' + error.message, 'error');
-                } else {
-                    showToast('Ошибка загрузки фото: ' + error.message, 'error');
-                }
-                
-                // Восстанавливаем placeholder
-                const photoContainer = card.querySelector('.relative');
-                if (photoContainer) {
-                    photoContainer.outerHTML = '<div class="photo-placeholder w-full aspect-square bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center"><i class="fas fa-exclamation-triangle text-amber-500 text-5xl mb-3"></i><p class="text-gray-500 font-semibold px-4 text-center">' + error.message + '</p></div>';
-                }
-                
-                // НЕ восстанавливаем кнопку - товар уже оцифрован другим сотрудником
-                const photoButtonContainer = card.querySelector('.photo-button-container');
-                if (photoButtonContainer && !error.message.includes('уже оцифровано')) {
-                    photoButtonContainer.style.display = 'block';
-                    activePhotoBtn.disabled = false;
                 }
             }
-            
-            e.target.value = '';
         });
         
         // Обработчик клика на кнопку "Переделать фото"
