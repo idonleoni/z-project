@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -804,17 +804,34 @@
                 html += '</div>';
             }
             
+
+            // Поле для изменения количества
+            html += '<div class="mb-4">';
+            html += '<label class="block text-sm font-semibold text-gray-700 mb-2">Фактический остаток</label>';
+            html += '<div class="flex gap-2">';
+            html += '<input type="number" class="qty-input flex-1 px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#E31E24] focus:outline-none" value="' + task.qty + '" min="0" step="0.01">';
+            html += '<button class="qty-confirm-btn btn-spring bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 rounded-xl">';
+            html += '<i class="fas fa-check"></i>';
+            html += '</button>';
+            html += '</div>';
+            html += '</div>';
             // ЗАДАЧА 1: Кнопка фото только если товар НЕ оцифрован
             if (!task.hasPhoto || !task.photoBase64) {
                 html += '<div class="photo-button-container mb-4">';
                 html += '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden active:scale-95 transition-transform">';
                 html += '<i class="fas fa-camera text-2xl mr-3"></i>';
-                html += 'Сфотографировать для каталога';
                 html += '<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div>';
                 html += '</button>';
                 html += '</div>';
                 html += '<div class="action-buttons flex w-full opacity-40 pointer-events-none">';
             } else {
+                // Р•СЃР»Рё С„РѕС‚Рѕ СѓР¶Рµ РµСЃС‚СЊ, РїРѕРєР°Р·С‹РІР°РµРј РєРЅРѕРїРєСѓ "РџРµСЂРµРґРµР»Р°С‚СЊ С„РѕС‚Рѕ"
+                html += '<div class="photo-button-container mb-4">';
+                html += '<button class="retake-photo-btn btn-spring w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">';
+                html += '<i class="fas fa-redo text-xl mr-2"></i>';
+                html += 'РџРµСЂРµРґРµР»Р°С‚СЊ С„РѕС‚Рѕ';
+                html += '</button>';
+                html += '</div>';
                 html += '<div class="action-buttons flex w-full">';
             }
             
@@ -1253,7 +1270,7 @@
                     const actionButtons = card.querySelector('.action-buttons');
                     const newPhotoBtn = document.createElement('div');
                     newPhotoBtn.className = 'photo-button-container mb-4';
-                    newPhotoBtn.innerHTML = '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden active:scale-95 transition-transform"><i class="fas fa-camera text-2xl mr-3"></i>Сфотографировать для каталога<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div></button>';
+                    newPhotoBtn.innerHTML = '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden active:scale-95 transition-transform"><i class="fas fa-camera text-2xl mr-3"></i>Сделать фото<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div></button>';
                     actionButtons.parentNode.insertBefore(newPhotoBtn, actionButtons);
                     
                     actionButtons.classList.add('opacity-40', 'pointer-events-none');
@@ -1280,8 +1297,61 @@
             if (photoBtn && !photoBtn.disabled) {
                 document.getElementById('cameraInput').click();
             }
+
+            // Обработчик кнопки "Переделать фото"
+            const retakeBtn = e.target.closest('.retake-photo-btn');
+            if (retakeBtn && !retakeBtn.disabled) {
+                document.getElementById('cameraInput').click();
+            }
+
+            // Обработчик кнопки подтверждения количества
+            const qtyConfirmBtn = e.target.closest('.qty-confirm-btn');
+            if (qtyConfirmBtn && !qtyConfirmBtn.disabled) {
+                handleQuantityConfirm(qtyConfirmBtn);
+            }
         });
 
+        // Функция обработки подтверждения количества
+        async function handleQuantityConfirm(button) {
+            const card = button.closest('.product-card');
+            const qtyInput = card.querySelector('.qty-input');
+            const newQty = parseFloat(qtyInput.value) || 0;
+            const taskId = card.dataset.taskId;
+            const artikul = card.dataset.artikul;
+
+            // Блокируем кнопку
+            button.disabled = true;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<div class="spinner"></div>';
+
+            try {
+                const result = await apiCall('updateQuantity', {
+                    userId: currentUser.userId,
+                    taskId: taskId,
+                    artikul: artikul,
+                    quantity: newQty
+                });
+
+                if (result.success) {
+                    // Подкрашиваем поле ввода в зеленый
+                    qtyInput.classList.add('border-emerald-500', 'bg-emerald-50');
+                    showToast('Остаток обновлен!', 'success');
+
+                    // Возвращаем галочку
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-check text-white"></i>';
+                        button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        button.classList.add('bg-emerald-500');
+                    }, 300);
+                } else {
+                    throw new Error(result.error || 'Ошибка обновления');
+                }
+            } catch (error) {
+                showToast('Ошибка: ' + error.message, 'error');
+                button.disabled = false;
+                button.innerHTML = originalContent;
+            }
+        }
         // ============================================
         // ACTION BUTTONS (УПРОЩЕННАЯ ЛОГИКА - ТОЛЬКО ПРОДАЖА)
         // ============================================
