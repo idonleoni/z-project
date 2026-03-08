@@ -1397,15 +1397,34 @@
             const artikul = card.dataset.artikul;
             const name = card.dataset.name;
             
-            // Получаем данные из карточки
-            const task = tasksData.find(t => t.artikul === artikul);
+            console.log('handleAskAI вызван для артикула:', artikul);
+            console.log('Всего задач в tasksData:', tasksData.length);
+            
+            // Получаем данные из карточки или из tasksData
+            let task = tasksData.find(t => t.artikul === artikul);
+            
             if (!task) {
-                showToast('Ошибка: товар не найден', 'error');
-                return;
+                console.warn('Товар не найден в tasksData, пробуем получить из DOM');
+                // Если не нашли в массиве, берем данные из DOM
+                const priceText = card.querySelector('.text-2xl.font-bold.text-\\[\\#E31E24\\]');
+                const qtyInput = card.querySelector('.qty-input');
+                const daysText = card.querySelector('.text-xs.text-amber-700');
+                
+                task = {
+                    artikul: artikul,
+                    name: name,
+                    price: priceText ? parseFloat(priceText.textContent.replace(/[^\d]/g, '')) : 0,
+                    qty: qtyInput ? parseFloat(qtyInput.value) : 0,
+                    daysNonLiquid: daysText ? parseInt(daysText.textContent.match(/\d+/)?.[0] || '0') : 0
+                };
+                
+                console.log('Данные получены из DOM:', task);
             }
             
             const price = task.price || 0;
             const days = task.daysNonLiquid || 0;
+            
+            console.log('Отправка запроса к ИИ:', { artikul, name, price, days });
             
             // Блокируем кнопку и показываем спиннер
             button.disabled = true;
@@ -1419,6 +1438,8 @@
                     price: price,
                     days: days
                 });
+                
+                console.log('Результат от ИИ:', result);
                 
                 if (result.success) {
                     // Показываем совет в карточке
@@ -1435,6 +1456,7 @@
                     throw new Error(result.error || 'Ошибка получения совета');
                 }
             } catch (error) {
+                console.error('Ошибка handleAskAI:', error);
                 showToast('Ошибка: ' + error.message, 'error');
             } finally {
                 // Возвращаем кнопку в исходное состояние
