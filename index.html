@@ -912,12 +912,12 @@
                 html += '<button class="ask-ai-btn btn-spring w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl text-sm shadow-md">';
                 html += '<i class="fas fa-brain mr-2"></i>Спросить ИИ';
                 html += '</button>';
-                html += '<div class="ai-advice-container hidden mt-3 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-4">';
+                html += '<div class="ai-advice-container hidden mt-3 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-4" style="max-height: none; overflow: visible;">';
                 html += '<div class="flex justify-between items-start mb-2">';
                 html += '<h4 class="text-xs font-bold text-purple-800 uppercase">💡 Совет ИИ-ассистента</h4>';
                 html += '<button class="close-ai-advice text-purple-400 hover:text-purple-600"><i class="fas fa-times"></i></button>';
                 html += '</div>';
-                html += '<div class="ai-advice-text text-sm text-gray-800 leading-relaxed" style="white-space: pre-wrap; word-wrap: break-word;"></div>';
+                html += '<div class="ai-advice-text text-sm text-gray-800 leading-relaxed" style="white-space: pre-wrap; word-wrap: break-word; max-height: none; overflow: visible; display: block;"></div>';
                 html += '</div>';
                 html += '</div>';
             }
@@ -1441,14 +1441,24 @@
                 
                 console.log('Результат от ИИ:', result);
                 console.log('Длина совета:', result.advice ? result.advice.length : 0, 'символов');
+                console.log('Полный текст совета:', result.advice);
                 
                 if (result.success) {
                     // Показываем совет в карточке
                     const adviceContainer = card.querySelector('.ai-advice-container');
                     const adviceText = card.querySelector('.ai-advice-text');
                     
+                    console.log('adviceContainer найден:', !!adviceContainer);
+                    console.log('adviceText найден:', !!adviceText);
+                    
                     // Форматируем текст: заменяем переносы строк на <br> и сохраняем форматирование
-                    adviceText.innerHTML = result.advice.replace(/\n/g, '<br>');
+                    const formattedAdvice = result.advice.replace(/\n/g, '<br>');
+                    console.log('Форматированный текст длина:', formattedAdvice.length);
+                    
+                    adviceText.innerHTML = formattedAdvice;
+                    
+                    console.log('Текст после вставки в DOM:', adviceText.innerHTML.substring(0, 200));
+                    
                     adviceContainer.classList.remove('hidden');
                     adviceContainer.classList.add('fade-in');
                     
