@@ -915,7 +915,7 @@
                 html += '<div class="ai-advice-container hidden mt-3 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-4" style="max-height: none; overflow: visible;">';
                 html += '<div class="flex justify-between items-start mb-2">';
                 html += '<h4 class="text-xs font-bold text-purple-800 uppercase">💡 Совет ИИ-ассистента</h4>';
-                html += '<button class="close-ai-advice text-purple-400 hover:text-purple-600"><i class="fas fa-times"></i></button>';
+                html += '<button class="close-ai-advice text-purple-400 hover:text-purple-700 hover:bg-purple-100 rounded-full w-6 h-6 flex items-center justify-center transition-all"><i class="fas fa-times text-sm"></i></button>';
                 html += '</div>';
                 html += '<div class="ai-advice-text text-sm text-gray-800 leading-relaxed" style="white-space: pre-wrap; word-wrap: break-word; max-height: none; overflow: visible; display: block;"></div>';
                 html += '</div>';
@@ -1338,14 +1338,46 @@
             // Обработчик кнопки "Спросить ИИ"
             const askAiBtn = e.target.closest('.ask-ai-btn');
             if (askAiBtn && !askAiBtn.disabled) {
-                handleAskAI(askAiBtn);
+                const card = askAiBtn.closest('.product-card');
+                const adviceContainer = card.querySelector('.ai-advice-container');
+                
+                // Если совет уже показан, скрываем/показываем его
+                if (adviceContainer && adviceContainer.querySelector('.ai-advice-text').innerHTML.trim() !== '') {
+                    if (adviceContainer.classList.contains('hidden')) {
+                        // Показываем совет
+                        adviceContainer.classList.remove('hidden');
+                        adviceContainer.classList.add('fade-in');
+                        askAiBtn.innerHTML = '<i class="fas fa-eye-slash mr-2"></i>Скрыть совет';
+                    } else {
+                        // Скрываем совет
+                        adviceContainer.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        adviceContainer.style.opacity = '0';
+                        adviceContainer.style.transform = 'translateY(-10px)';
+                        setTimeout(() => {
+                            adviceContainer.classList.add('hidden');
+                            adviceContainer.style.opacity = '';
+                            adviceContainer.style.transform = '';
+                        }, 300);
+                        askAiBtn.innerHTML = '<i class="fas fa-brain mr-2"></i>Спросить ИИ';
+                    }
+                } else {
+                    // Если совета нет, запрашиваем у ИИ
+                    handleAskAI(askAiBtn);
+                }
             }
             
             // Обработчик кнопки закрытия совета ИИ
             const closeAiBtn = e.target.closest('.close-ai-advice');
             if (closeAiBtn) {
                 const container = closeAiBtn.closest('.ai-advice-container');
-                container.classList.add('hidden');
+                container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                container.style.opacity = '0';
+                container.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    container.classList.add('hidden');
+                    container.style.opacity = '';
+                    container.style.transform = '';
+                }, 300);
             }
         });
 
@@ -1441,26 +1473,25 @@
                 
                 console.log('Результат от ИИ:', result);
                 console.log('Длина совета:', result.advice ? result.advice.length : 0, 'символов');
-                console.log('Полный текст совета:', result.advice);
                 
                 if (result.success) {
                     // Показываем совет в карточке
                     const adviceContainer = card.querySelector('.ai-advice-container');
                     const adviceText = card.querySelector('.ai-advice-text');
                     
-                    console.log('adviceContainer найден:', !!adviceContainer);
-                    console.log('adviceText найден:', !!adviceText);
-                    
-                    // Форматируем текст: заменяем переносы строк на <br> и сохраняем форматирование
-                    const formattedAdvice = result.advice.replace(/\n/g, '<br>');
-                    console.log('Форматированный текст длина:', formattedAdvice.length);
+                    // Форматируем текст: 
+                    // 1. Заменяем ** на <strong> для жирного текста
+                    // 2. Заменяем переносы строк на <br>
+                    let formattedAdvice = result.advice
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // ** текст ** → <strong>текст</strong>
+                        .replace(/\n/g, '<br>');  // переносы строк
                     
                     adviceText.innerHTML = formattedAdvice;
-                    
-                    console.log('Текст после вставки в DOM:', adviceText.innerHTML.substring(0, 200));
-                    
                     adviceContainer.classList.remove('hidden');
                     adviceContainer.classList.add('fade-in');
+                    
+                    // Меняем текст кнопки на "Скрыть совет"
+                    button.innerHTML = '<i class="fas fa-eye-slash mr-2"></i>Скрыть совет';
                     
                     // Прокручиваем к совету
                     adviceContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1473,7 +1504,9 @@
             } finally {
                 // Возвращаем кнопку в исходное состояние
                 button.disabled = false;
-                button.innerHTML = originalContent;
+                if (!button.innerHTML.includes('Скрыть')) {
+                    button.innerHTML = originalContent;
+                }
             }
         }
         // ============================================
