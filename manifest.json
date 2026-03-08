@@ -1,6 +1,6 @@
 {
-  "name": "Zavkhoz OS",
-  "short_name": "Zavkhoz",
+  "name": "ЗАВХОЗ OS",
+  "short_name": "ЗАВХОЗ",
   "description": "Система управления задачами для сотрудников Завхоз",
   "start_url": "./",
   "display": "standalone",

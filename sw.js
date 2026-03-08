@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zavkhoz-pwa-v4';
+const CACHE_NAME = 'zavhoz-pwa-v5';
 const urlsToCache = [
   './',
   './index.html',

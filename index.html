@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#E31E24">
-    <title>Zavkhoz OS</title>
+    <title>ЗАВХОЗ OS</title>
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="./manifest.json">
@@ -13,7 +13,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Zavkhoz">
+    <meta name="apple-mobile-web-app-title" content="ЗАВХОЗ">
     
     <!-- Icons -->
     <link rel="icon" type="image/png" href="./logo.webp">
@@ -120,7 +120,7 @@
                 <i class="fas fa-download text-[#E31E24] text-xl"></i>
             </div>
             <div>
-                <h3 class="font-bold text-sm">Установить Zavkhoz OS</h3>
+                <h3 class="font-bold text-sm">Установить ЗАВХОЗ OS</h3>
                 <p class="text-xs opacity-90">Добавить на главный экран</p>
             </div>
         </div>
@@ -137,8 +137,8 @@
                 <div class="w-24 h-24 bg-white rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-6">
                     <i class="fas fa-lock text-[#E31E24] text-5xl"></i>
                 </div>
-                <img src="logo.webp" alt="Zavkhoz" class="h-12 w-12 aspect-square rounded-full object-cover shadow-sm mx-auto mb-4" onerror="this.style.display='none'">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Zavkhoz OS</h1>
+                <img src="logo.webp" alt="ЗАВХОЗ" class="h-12 w-12 aspect-square rounded-full object-cover shadow-sm mx-auto mb-4" onerror="this.style.display='none'">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">ЗАВХОЗ OS</h1>
                 <p class="text-gray-600 text-sm">Введите PIN-код для входа</p>
             </div>
             
@@ -232,7 +232,7 @@
     
     <!-- Sticky Header (скрыт на экране PIN) -->
     <header id="main-header" class="sticky top-0 z-50 bg-[#F5F4F0]/90 backdrop-blur-md flex items-center justify-between px-5 py-3 border-b border-gray-200 hidden">
-        <img src="./logo.webp" alt="Zavkhoz" class="w-10 h-10 rounded-full object-cover shadow-sm">
+        <img src="./logo.webp" alt="ЗАВХОЗ" class="w-10 h-10 rounded-full object-cover shadow-sm">
         <div class="absolute left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800" id="store-name">
             Завхоз
         </div>
@@ -523,16 +523,16 @@
         // ============================================
         
         function saveUserSession(user) {
-            localStorage.setItem('zavkhoz_user', JSON.stringify(user));
+            localStorage.setItem('zavhoz_user', JSON.stringify(user));
         }
         
         function getUserSession() {
-            const data = localStorage.getItem('zavkhoz_user');
+            const data = localStorage.getItem('zavhoz_user');
             return data ? JSON.parse(data) : null;
         }
         
         function clearUserSession() {
-            localStorage.removeItem('zavkhoz_user');
+            localStorage.removeItem('zavhoz_user');
         }
 
         // ============================================
@@ -540,7 +540,7 @@
         // ============================================
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Zavkhoz OS PWA инициализирован');
+            console.log('🚀 ЗАВХОЗ OS PWA инициализирован');
             
             // Проверяем сохраненную сессию
             const savedUser = getUserSession();
