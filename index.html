@@ -230,8 +230,8 @@
         </div>
     </div>
     
-    <!-- Sticky Header -->
-    <header class="sticky top-0 z-50 bg-[#F5F4F0]/90 backdrop-blur-md flex items-center justify-between px-5 py-3 border-b border-gray-200">
+    <!-- Sticky Header (скрыт на экране PIN) -->
+    <header id="main-header" class="sticky top-0 z-50 bg-[#F5F4F0]/90 backdrop-blur-md flex items-center justify-between px-5 py-3 border-b border-gray-200 hidden">
         <img src="./logo.webp" alt="Zavkhoz" class="w-10 h-10 rounded-full object-cover shadow-sm">
         <div class="absolute left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800" id="store-name">
             Завхоз
@@ -738,6 +738,8 @@
             authScreen.style.opacity = '0';
             setTimeout(() => {
                 authScreen.style.display = 'none';
+                // Показываем header после скрытия экрана PIN
+                document.getElementById('main-header').classList.remove('hidden');
             }, 600);
         }
 
@@ -885,11 +887,11 @@
                 html += '</div>';
                 html += '<div class="action-buttons flex w-full opacity-40 pointer-events-none">';
             } else {
-                // Р•СЃР»Рё С„РѕС‚Рѕ СѓР¶Рµ РµСЃС‚СЊ, РїРѕРєР°Р·С‹РІР°РµРј РєРЅРѕРїРєСѓ "РџРµСЂРµРґРµР»Р°С‚СЊ С„РѕС‚Рѕ"
+                // Если фото уже есть, показываем кнопку "Переделать фото"
                 html += '<div class="photo-button-container mb-4">';
                 html += '<button class="retake-photo-btn btn-spring w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">';
                 html += '<i class="fas fa-redo text-xl mr-2"></i>';
-                html += 'РџРµСЂРµРґРµР»Р°С‚СЊ С„РѕС‚Рѕ';
+                html += 'Переделать фото';
                 html += '</button>';
                 html += '</div>';
                 html += '<div class="action-buttons flex w-full">';
@@ -903,11 +905,6 @@
             html += '<div class="text-sm mt-1">+50 ₽ бонус</div>';
             html += '</button>';
             html += '</div>';
-            
-            // Кнопка Переделать фото
-            if (task.status === 'Photo_Requested' || task.status === 'Pending_Approval' || task.status === 'На модерации') {
-                html += '<button class="redo-photo-btn w-full mt-2 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors btn-spring active:scale-95"><i class="fas fa-redo mr-2"></i>Переделать фото</button>';
-            }
             
             html += '</div>';
             
@@ -1115,28 +1112,33 @@
             const file = e.target.files[0];
             if (!file) return;
             
+            // Ищем активную кнопку фото (обычная или переделать)
             const activePhotoBtn = document.querySelector('.photo-btn:not([disabled])');
-            if (!activePhotoBtn) return;
+            const activeRetakeBtn = document.querySelector('.retake-photo-btn:not([disabled])');
+            const triggerBtn = activePhotoBtn || activeRetakeBtn;
             
-            const card = activePhotoBtn.closest('.product-card');
+            if (!triggerBtn) return;
+            
+            const card = triggerBtn.closest('.product-card');
+            const isRetake = triggerBtn.classList.contains('retake-photo-btn');
             
             // АНТИ-АБУЗ: Проверяем, не заблокирована ли уже кнопка
-            if (activePhotoBtn.disabled) {
+            if (triggerBtn.disabled) {
                 showToast('Фото уже загружается или товар оцифрован', 'error');
                 return;
             }
             
             // Блокируем кнопку сразу
-            activePhotoBtn.disabled = true;
+            triggerBtn.disabled = true;
             
             try {
                 // МГНОВЕННЫЙ РЕНДЕР: Сжимаем и показываем фото ДО отправки на сервер
                 const { base64, dataUrl } = await compressImage(file, 800, 0.7);
                 
-                // Заменяем placeholder на изображение
-                const photoContainer = card.querySelector('.photo-placeholder');
-                if (photoContainer) {
-                    photoContainer.outerHTML = '<div class="relative w-full aspect-square bg-gray-100 photo-preview-container"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-full object-contain"></div>';
+                // Заменяем фото (или placeholder) на новое изображение
+                const existingPhoto = card.querySelector('.w-full.aspect-square');
+                if (existingPhoto) {
+                    existingPhoto.outerHTML = '<div class="relative w-full aspect-square bg-gray-100 photo-preview-container"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-full object-contain"></div>';
                 }
                 
                 // Скрываем кнопку фото
@@ -1145,8 +1147,11 @@
                     photoButtonContainer.style.display = 'none';
                 }
                 
-                // Сохраняем base64
+                // Сохраняем base64 и флаг что это переделка
                 card.dataset.tempBase64 = base64;
+                if (isRetake) {
+                    card.dataset.isRetake = 'true';
+                }
                 
                 // Показываем кнопки "Переделать" и "Отправить"
                 let previewBtns = card.querySelector('.preview-buttons-container');
@@ -1170,7 +1175,7 @@
             } catch (error) {
                 console.error('Photo compression error:', error);
                 showToast('Ошибка обработки фото', 'error');
-                activePhotoBtn.disabled = false;
+                triggerBtn.disabled = false;
             }
         });
 
@@ -1209,6 +1214,7 @@
                 const artikul = card.dataset.artikul;
                 const name = card.dataset.name;
                 const base64 = card.dataset.tempBase64;
+                const isRetake = card.dataset.isRetake === 'true';
                 
                 if (!base64) return;
                 
@@ -1243,7 +1249,18 @@
                         }
                         
                         // Скрываем превью кнопки
-                        card.querySelector('.preview-buttons-container').remove();
+                        const previewContainer = card.querySelector('.preview-buttons-container');
+                        if (previewContainer) previewContainer.remove();
+                        
+                        // Если это была переделка, показываем желтую кнопку снова
+                        if (isRetake) {
+                            const photoButtonContainer = card.querySelector('.photo-button-container');
+                            if (photoButtonContainer) {
+                                photoButtonContainer.style.display = 'block';
+                                const retakeBtn = photoButtonContainer.querySelector('.retake-photo-btn');
+                                if (retakeBtn) retakeBtn.disabled = false;
+                            }
+                        }
                         
                         // Разблокируем кнопки действий (Продать)
                         const actionButtons = card.querySelector('.action-buttons');
@@ -1252,8 +1269,18 @@
                             actionButtons.querySelectorAll('button').forEach(btn => btn.disabled = false);
                         }
                         
-                        updateEarnings(result.bonus || 10);
-                        showToast('Товар успешно оцифрован! +' + (result.bonus || 10) + ' ₽', 'success');
+                        // Очищаем флаги
+                        delete card.dataset.tempBase64;
+                        delete card.dataset.isRetake;
+                        
+                        // Показываем сообщение в зависимости от типа операции
+                        const bonusAmount = result.bonus || 0;
+                        if (isRetake) {
+                            showToast('Фото успешно обновлено!', 'success');
+                        } else {
+                            updateEarnings(bonusAmount);
+                            showToast('Товар успешно оцифрован! +' + bonusAmount + ' ₽', 'success');
+                        }
                     } else {
                         throw new Error(result.error || 'Ошибка загрузки фото');
                     }
@@ -1272,44 +1299,6 @@
             }
         });
         
-        // Обработчик клика на кнопку "Переделать фото"
-        document.addEventListener('click', function(e) {
-            const redoBtn = e.target.closest('.redo-photo-btn');
-            if (redoBtn) {
-                const card = redoBtn.closest('.product-card');
-                
-                // Восстанавливаем placeholder
-                const photoContainer = card.querySelector('.w-full.aspect-square');
-                if (photoContainer) {
-                    photoContainer.outerHTML = '<div class="photo-placeholder w-full aspect-square bg-gradient-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center"><i class="fas fa-image text-gray-400 text-5xl mb-3"></i><p class="text-gray-500 font-semibold">Фото отсутствует в базе</p></div>';
-                }
-                
-                // Показываем кнопку фото
-                let photoButtonContainer = card.querySelector('.photo-button-container');
-                if (!photoButtonContainer) {
-                    const actionButtons = card.querySelector('.action-buttons');
-                    const newPhotoBtn = document.createElement('div');
-                    newPhotoBtn.className = 'photo-button-container mb-4';
-                    newPhotoBtn.innerHTML = '<button class="photo-btn btn-spring w-full bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-5 px-6 rounded-2xl text-lg shadow-lg relative overflow-hidden active:scale-95 transition-transform"><i class="fas fa-camera text-2xl mr-3"></i>Сделать фото<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div></button>';
-                    actionButtons.parentNode.insertBefore(newPhotoBtn, actionButtons);
-                    
-                    actionButtons.classList.add('opacity-40', 'pointer-events-none');
-                    actionButtons.querySelectorAll('button').forEach(btn => btn.disabled = true);
-                } else {
-                    photoButtonContainer.style.display = 'block';
-                    const activePhotoBtn = photoButtonContainer.querySelector('.photo-btn');
-                    if (activePhotoBtn) activePhotoBtn.disabled = false;
-                    
-                    const actionButtons = card.querySelector('.action-buttons');
-                    if (actionButtons) {
-                        actionButtons.classList.add('opacity-40', 'pointer-events-none');
-                        actionButtons.querySelectorAll('button').forEach(btn => btn.disabled = true);
-                    }
-                }
-                
-                redoBtn.remove();
-            }
-        });
         
         // Обработчик клика на кнопку фото
         document.addEventListener('click', function(e) {
@@ -1318,7 +1307,7 @@
                 document.getElementById('cameraInput').click();
             }
 
-            // Обработчик кнопки "Переделать фото"
+            // Обработчик кнопки "Переделать фото" (желтая кнопка)
             const retakeBtn = e.target.closest('.retake-photo-btn');
             if (retakeBtn && !retakeBtn.disabled) {
                 document.getElementById('cameraInput').click();
