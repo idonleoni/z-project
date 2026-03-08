@@ -906,6 +906,22 @@
             html += '</button>';
             html += '</div>';
             
+            // КНОПКА "СПРОСИТЬ ИИ" (только если фото есть)
+            if (hasPhotoForActions) {
+                html += '<div class="mt-3">';
+                html += '<button class="ask-ai-btn btn-spring w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl text-sm shadow-md">';
+                html += '<i class="fas fa-brain mr-2"></i>Спросить ИИ';
+                html += '</button>';
+                html += '<div class="ai-advice-container hidden mt-3 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-4">';
+                html += '<div class="flex justify-between items-start mb-2">';
+                html += '<h4 class="text-xs font-bold text-purple-800 uppercase">💡 Совет ИИ-ассистента</h4>';
+                html += '<button class="close-ai-advice text-purple-400 hover:text-purple-600"><i class="fas fa-times"></i></button>';
+                html += '</div>';
+                html += '<div class="ai-advice-text text-sm text-gray-800 whitespace-pre-wrap"></div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            
             html += '</div>';
             
             card.innerHTML = html;
@@ -1318,6 +1334,19 @@
             if (qtyConfirmBtn && !qtyConfirmBtn.disabled) {
                 handleQuantityConfirm(qtyConfirmBtn);
             }
+            
+            // Обработчик кнопки "Спросить ИИ"
+            const askAiBtn = e.target.closest('.ask-ai-btn');
+            if (askAiBtn && !askAiBtn.disabled) {
+                handleAskAI(askAiBtn);
+            }
+            
+            // Обработчик кнопки закрытия совета ИИ
+            const closeAiBtn = e.target.closest('.close-ai-advice');
+            if (closeAiBtn) {
+                const container = closeAiBtn.closest('.ai-advice-container');
+                container.classList.add('hidden');
+            }
         });
 
         // Функция обработки подтверждения количества
@@ -1357,6 +1386,58 @@
                 }
             } catch (error) {
                 showToast('Ошибка: ' + error.message, 'error');
+                button.disabled = false;
+                button.innerHTML = originalContent;
+            }
+        }
+        
+        // Функция обработки запроса к ИИ-ассистенту
+        async function handleAskAI(button) {
+            const card = button.closest('.product-card');
+            const artikul = card.dataset.artikul;
+            const name = card.dataset.name;
+            
+            // Получаем данные из карточки
+            const task = tasksData.find(t => t.artikul === artikul);
+            if (!task) {
+                showToast('Ошибка: товар не найден', 'error');
+                return;
+            }
+            
+            const price = task.price || 0;
+            const days = task.daysNonLiquid || 0;
+            
+            // Блокируем кнопку и показываем спиннер
+            button.disabled = true;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<div class="spinner mx-auto"></div>';
+            
+            try {
+                const result = await apiCall('askAIAssistant', {
+                    artikul: artikul,
+                    name: name,
+                    price: price,
+                    days: days
+                });
+                
+                if (result.success) {
+                    // Показываем совет в карточке
+                    const adviceContainer = card.querySelector('.ai-advice-container');
+                    const adviceText = card.querySelector('.ai-advice-text');
+                    
+                    adviceText.textContent = result.advice;
+                    adviceContainer.classList.remove('hidden');
+                    adviceContainer.classList.add('fade-in');
+                    
+                    // Прокручиваем к совету
+                    adviceContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    throw new Error(result.error || 'Ошибка получения совета');
+                }
+            } catch (error) {
+                showToast('Ошибка: ' + error.message, 'error');
+            } finally {
+                // Возвращаем кнопку в исходное состояние
                 button.disabled = false;
                 button.innerHTML = originalContent;
             }
