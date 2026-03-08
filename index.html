@@ -402,6 +402,53 @@
             </div>
         </div>
         
+        <!-- Tab 4: Админка (ЗАДАЧА 3) -->
+        <div id="tab-admin" class="tab-content hidden">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-user-shield mr-2 text-indigo-600"></i>
+                Панель администратора
+            </h2>
+            
+            <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-robot mr-2 text-purple-600"></i>
+                    ИИ-Маркетолог
+                </h3>
+                
+                <p class="text-gray-600 mb-4">Автоматическая генерация рекламных постов для распродажи неликвида через Gemini AI.</p>
+                
+                <button id="generate-post-btn" class="w-full btn-spring bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg mb-4">
+                    <i class="fas fa-magic mr-2"></i>
+                    Сгенерировать пост о неликвиде
+                </button>
+                
+                <!-- Результат генерации -->
+                <div id="ai-result-container" class="hidden">
+                    <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 border-2 border-purple-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-bold text-purple-800 uppercase tracking-wide">Сгенерированный пост</h4>
+                            <button id="copy-post-btn" class="btn-spring bg-white hover:bg-purple-100 text-purple-600 px-3 py-1 rounded-lg text-sm font-semibold shadow-sm">
+                                <i class="fas fa-copy mr-1"></i>Копировать
+                            </button>
+                        </div>
+                        <div id="ai-result-text" class="bg-white rounded-xl p-4 text-gray-800 whitespace-pre-wrap text-sm leading-relaxed shadow-sm"></div>
+                        <div id="ai-result-meta" class="mt-3 text-xs text-purple-600 font-medium"></div>
+                    </div>
+                </div>
+                
+                <!-- Сообщение об ошибке -->
+                <div id="ai-error-container" class="hidden">
+                    <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                            <h4 class="text-sm font-bold text-red-800">Ошибка генерации</h4>
+                        </div>
+                        <p id="ai-error-text" class="text-sm text-red-700"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     </main>
 
     <!-- Bottom Navigation -->
@@ -418,6 +465,11 @@
             <button class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4" data-tab="profile">
                 <i class="fas fa-user text-2xl mb-1"></i>
                 <span class="text-xs font-semibold">Профиль</span>
+            </button>
+            <!-- ЗАДАЧА 3: Вкладка Админка (скрыта по умолчанию) -->
+            <button id="admin-tab-btn" class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4 hidden" data-tab="admin">
+                <i class="fas fa-user-shield text-2xl mb-1"></i>
+                <span class="text-xs font-semibold">Админка</span>
             </button>
         </div>
     </nav>
@@ -593,6 +645,7 @@
             initializeShiftModal();
             initializeRevenueProgress();
             initializeLogout();
+            initializeAdminPanel(); // ЗАДАЧА 3: Инициализация админ-панели
             updateUIWithUser();
             loadTasks();
         }
@@ -697,6 +750,14 @@
             document.getElementById('profile-name').textContent = currentUser.name;
             document.getElementById('profile-store').textContent = currentUser.store;
             document.getElementById('store-name').textContent = currentUser.store;
+            
+            // ЗАДАЧА 3: Показываем вкладку Админка только для роли "Админ"
+            if (currentUser.role === 'Админ') {
+                document.getElementById('admin-tab-btn').classList.remove('hidden');
+                console.log('✅ Вкладка Админка доступна для роли:', currentUser.role);
+            } else {
+                document.getElementById('admin-tab-btn').classList.add('hidden');
+            }
             
             updateProfileTab();
         }
@@ -1467,6 +1528,99 @@
                     showToast('Ошибка отправки отчета: ' + (result.error || 'Неизвестная ошибка'), 'error');
                 }
             });
+        }
+        
+        // ============================================
+        // ADMIN PANEL (ЗАДАЧА 3)
+        // ============================================
+        
+        function initializeAdminPanel() {
+            const generateBtn = document.getElementById('generate-post-btn');
+            const copyBtn = document.getElementById('copy-post-btn');
+            
+            if (generateBtn) {
+                generateBtn.addEventListener('click', async function() {
+                    // Блокируем кнопку и показываем спиннер
+                    const originalContent = generateBtn.innerHTML;
+                    generateBtn.disabled = true;
+                    generateBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Генерация поста...</span>';
+                    
+                    // Скрываем предыдущие результаты
+                    document.getElementById('ai-result-container').classList.add('hidden');
+                    document.getElementById('ai-error-container').classList.add('hidden');
+                    
+                    try {
+                        console.log('🤖 Запуск ИИ-маркетолога...');
+                        
+                        // Вызываем API
+                        const result = await apiCall('runAIMarketer');
+                        
+                        console.log('Результат ИИ-маркетолога:', result);
+                        
+                        if (result.success) {
+                            // Показываем результат
+                            document.getElementById('ai-result-text').textContent = result.post;
+                            document.getElementById('ai-result-meta').textContent = 
+                                '📊 Товаров обработано: ' + result.itemsCount + 
+                                (result.tokensUsed ? ' | Токенов использовано: ' + result.tokensUsed : '');
+                            document.getElementById('ai-result-container').classList.remove('hidden');
+                            
+                            showToast('Пост успешно сгенерирован!', 'success');
+                        } else {
+                            // Показываем ошибку
+                            document.getElementById('ai-error-text').textContent = result.error || 'Неизвестная ошибка';
+                            document.getElementById('ai-error-container').classList.remove('hidden');
+                            
+                            showToast('Ошибка генерации поста', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Ошибка вызова ИИ-маркетолога:', error);
+                        document.getElementById('ai-error-text').textContent = error.message;
+                        document.getElementById('ai-error-container').classList.remove('hidden');
+                        showToast('Ошибка соединения с сервером', 'error');
+                    } finally {
+                        // Разблокируем кнопку
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Кнопка копирования поста
+            if (copyBtn) {
+                copyBtn.addEventListener('click', function() {
+                    const postText = document.getElementById('ai-result-text').textContent;
+                    
+                    // Копируем в буфер обмена
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(postText).then(() => {
+                            showToast('Пост скопирован в буфер обмена!', 'success');
+                            copyBtn.innerHTML = '<i class="fas fa-check mr-1"></i>Скопировано';
+                            setTimeout(() => {
+                                copyBtn.innerHTML = '<i class="fas fa-copy mr-1"></i>Копировать';
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Ошибка копирования:', err);
+                            showToast('Ошибка копирования', 'error');
+                        });
+                    } else {
+                        // Fallback для старых браузеров
+                        const textArea = document.createElement('textarea');
+                        textArea.value = postText;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-999999px';
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                            showToast('Пост скопирован!', 'success');
+                        } catch (err) {
+                            showToast('Ошибка копирования', 'error');
+                        }
+                        document.body.removeChild(textArea);
+                    }
+                });
+            }
         }
     </script>
 </body>
