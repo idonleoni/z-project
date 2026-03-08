@@ -1107,38 +1107,34 @@
                 reader.readAsDataURL(file);
             });
         }
+        // Переменная для хранения карточки, которая инициировала камеру
+        let activePhotoCard = null;
         
         document.getElementById('cameraInput').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
             
-            // Ищем активную кнопку фото (обычная или переделать)
-            const activePhotoBtn = document.querySelector('.photo-btn:not([disabled])');
-            const activeRetakeBtn = document.querySelector('.retake-photo-btn:not([disabled])');
-            const triggerBtn = activePhotoBtn || activeRetakeBtn;
-            
-            if (!triggerBtn) return;
-            
-            const card = triggerBtn.closest('.product-card');
-            const isRetake = triggerBtn.classList.contains('retake-photo-btn');
-            
-            // АНТИ-АБУЗ: Проверяем, не заблокирована ли уже кнопка
-            if (triggerBtn.disabled) {
-                showToast('Фото уже загружается или товар оцифрован', 'error');
+            // Используем сохраненную карточку
+            if (!activePhotoCard) {
+                console.error('Нет активной карточки для загрузки фото');
                 return;
             }
             
-            // Блокируем кнопку сразу
-            triggerBtn.disabled = true;
+            const card = activePhotoCard;
+            activePhotoCard = null; // Сбрасываем после использования
+            
+            // Определяем тип операции по наличию фото
+            const existingPhoto = card.querySelector('.w-full.aspect-square img');
+            const isRetake = existingPhoto !== null;
             
             try {
                 // МГНОВЕННЫЙ РЕНДЕР: Сжимаем и показываем фото ДО отправки на сервер
                 const { base64, dataUrl } = await compressImage(file, 800, 0.7);
                 
                 // Заменяем фото (или placeholder) на новое изображение
-                const existingPhoto = card.querySelector('.w-full.aspect-square');
-                if (existingPhoto) {
-                    existingPhoto.outerHTML = '<div class="relative w-full aspect-square bg-gray-100 photo-preview-container"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-full object-contain"></div>';
+                const photoContainer = card.querySelector('.w-full.aspect-square');
+                if (photoContainer) {
+                    photoContainer.outerHTML = '<div class="relative w-full aspect-square bg-gray-100 photo-preview-container"><img src="' + dataUrl + '" alt="Фото товара" class="w-full h-full object-contain"></div>';
                 }
                 
                 // Скрываем кнопку фото
@@ -1175,7 +1171,6 @@
             } catch (error) {
                 console.error('Photo compression error:', error);
                 showToast('Ошибка обработки фото', 'error');
-                triggerBtn.disabled = false;
             }
         });
 
@@ -1304,12 +1299,17 @@
         document.addEventListener('click', function(e) {
             const photoBtn = e.target.closest('.photo-btn');
             if (photoBtn && !photoBtn.disabled) {
+                const card = photoBtn.closest('.product-card');
+                activePhotoCard = card;
                 document.getElementById('cameraInput').click();
             }
 
             // Обработчик кнопки "Переделать фото" (желтая кнопка)
             const retakeBtn = e.target.closest('.retake-photo-btn');
             if (retakeBtn && !retakeBtn.disabled) {
+                const card = retakeBtn.closest('.product-card');
+                activePhotoCard = card;
+                console.log('Переделать фото: карточка сохранена', card.dataset.taskId);
                 document.getElementById('cameraInput').click();
             }
 
