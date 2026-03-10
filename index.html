@@ -134,10 +134,7 @@
     <div id="pin-auth-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center">
         <div class="text-center px-6">
             <div class="mb-8">
-                <div class="w-24 h-24 bg-white rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-6">
-                    <i class="fas fa-lock text-[#E31E24] text-5xl"></i>
-                </div>
-                <img src="logo.webp" alt="ЗАВХОЗ" class="h-12 w-12 aspect-square rounded-full object-cover shadow-sm mx-auto mb-4" onerror="this.style.display='none'">
+                <img src="logo.webp" alt="ЗАВХОЗ" class="h-18 w-18 aspect-square rounded-full object-cover shadow-lg mx-auto mb-4" onerror="this.style.display='none'">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">ЗАВХОЗ OS</h1>
                 <p class="text-gray-600 text-sm">Введите PIN-код для входа</p>
             </div>
@@ -209,21 +206,21 @@
         </div>
     </div>
 
-    <!-- Modal: Shift Confirmation -->
-    <div id="shift-confirm-modal" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
+    <!-- Modal: Metrics Confirmation -->
+    <div id="metrics-confirm-modal" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full fade-in">
             <div class="p-6">
                 <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-shield-alt text-[#E31E24] mr-3"></i>
-                    Подтверждение сдачи смены
+                    Подтверждение отправки
                 </h3>
-                <p class="text-gray-700 mb-6">Вы уверены? Данные уйдут руководству без возможности изменения.</p>
+                <p class="text-gray-700 mb-6">Вы уверены? Показатели будут отправлены для расчета бонусов.</p>
                 <div class="flex gap-3">
-                    <button id="shift-cancel-btn" class="flex-1 btn-spring bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl">
+                    <button id="metrics-cancel-btn" class="flex-1 btn-spring bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl">
                         Отмена
                     </button>
-                    <button id="shift-confirm-btn-final" class="flex-1 btn-spring bg-[#E31E24] hover:bg-[#c91a1f] text-white font-semibold py-3 rounded-xl">
-                        Да, сдать смену
+                    <button id="metrics-confirm-btn-final" class="flex-1 btn-spring bg-[#E31E24] hover:bg-[#c91a1f] text-white font-semibold py-3 rounded-xl">
+                        Да, отправить
                     </button>
                 </div>
             </div>
@@ -265,12 +262,24 @@
             <div id="products-container" class="space-y-4 hidden">
                 <!-- Карточки загружаются динамически -->
             </div>
+            
+            <!-- Кнопка запроса дополнительных задач -->
+            <button id="request-more-tasks-btn" class="hidden w-full btn-spring bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-6 rounded-2xl border-2 border-gray-300 mt-4">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Запросить еще задачи
+            </button>
 
             <!-- Сообщение о завершении -->
             <div id="completion-message" class="hidden text-center py-12">
                 <div class="text-7xl mb-4">🎉</div>
                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Все задачи выполнены!</h2>
                 <p class="text-lg text-gray-600">Отличная работа.</p>
+                
+                <!-- Кнопка запроса дополнительных задач в блоке завершения -->
+                <button id="request-more-tasks-btn-completed" class="btn-spring bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-6 rounded-2xl border-2 border-gray-300 mt-6">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Запросить еще задачи
+                </button>
             </div>
             
             <!-- Сообщение "Нет задач" -->
@@ -281,12 +290,14 @@
             </div>
         </div>
 
-        <!-- Tab 2: Смена -->
-        <div id="tab-shift" class="tab-content hidden">
+        <!-- Tab 2: Показатели -->
+        <div id="tab-metrics" class="tab-content hidden">
             <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-cash-register mr-2 text-emerald-600"></i>
-                Закрытие смены
+                <i class="fas fa-chart-bar mr-2 text-emerald-600"></i>
+                Ввод показателей
             </h2>
+            
+            <p class="text-gray-600 text-sm mb-4">Внесите свои результаты за день для начисления бонусов.</p>
             
             <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
                 <div class="mb-4">
@@ -298,9 +309,9 @@
                     <p class="text-xs text-gray-500 mt-1">За каждого клиента начисляется бонус</p>
                 </div>
                 
-                <button id="submit-shift-btn" class="w-full btn-spring bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">
+                <button id="submit-metrics-btn" class="w-full btn-spring bg-gradient-to-r from-[#E31E24] to-[#c91a1f] hover:from-[#c91a1f] hover:to-[#b01619] text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">
                     <i class="fas fa-paper-plane mr-2"></i>
-                    Сдать смену
+                    Отправить показатели
                 </button>
             </div>
         </div>
@@ -371,13 +382,14 @@
             </div>
         </div>
         
-        <!-- Tab 4: Админка (ЗАДАЧА 3) -->
+        <!-- Tab 4: Управление -->
         <div id="tab-admin" class="tab-content hidden">
             <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-user-shield mr-2 text-indigo-600"></i>
-                Панель администратора
+                <i class="fas fa-sliders-h mr-2 text-indigo-600"></i>
+                Панель управления
             </h2>
             
+            <!-- ИИ-Маркетолог -->
             <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-robot mr-2 text-purple-600"></i>
@@ -415,6 +427,36 @@
                         <p id="ai-error-text" class="text-sm text-red-700"></p>
                     </div>
                 </div>
+            </div>
+            
+            <!-- ИИ-Аудитор -->
+            <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-shield-alt mr-2 text-red-600"></i>
+                    ИИ-Аудитор (Ночной контроль)
+                </h3>
+                
+                <p class="text-gray-600 mb-4">Анализ подозрительных действий персонала за день.</p>
+                
+                <button id="audit-logs-btn" class="w-full btn-spring bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">
+                    <i class="fas fa-search mr-2"></i>
+                    Запустить аудит логов
+                </button>
+            </div>
+            
+            <!-- ИИ-Нормализатор 1С -->
+            <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-broom mr-2 text-blue-600"></i>
+                    ИИ-Нормализатор 1С
+                </h3>
+                
+                <p class="text-gray-600 mb-4">Перевод кривой номенклатуры из 1С в понятный язык.</p>
+                
+                <button id="normalize-names-btn" class="w-full btn-spring bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">
+                    <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                    Запустить очистку названий
+                </button>
             </div>
         </div>
         
@@ -461,18 +503,18 @@
                 <i class="fas fa-tasks text-2xl mb-1"></i>
                 <span class="text-xs font-semibold">Задачи</span>
             </button>
-            <button class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4" data-tab="shift">
-                <i class="fas fa-cash-register text-2xl mb-1"></i>
-                <span class="text-xs font-semibold">Смена</span>
+            <button class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4" data-tab="metrics">
+                <i class="fas fa-chart-line text-2xl mb-1"></i>
+                <span class="text-xs font-semibold">Показатели</span>
             </button>
             <button class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4" data-tab="profile">
                 <i class="fas fa-user text-2xl mb-1"></i>
                 <span class="text-xs font-semibold">Профиль</span>
             </button>
-            <!-- ЗАДАЧА 3: Вкладка Админка (скрыта по умолчанию) -->
+            <!-- Вкладка Управление (скрыта по умолчанию) -->
             <button id="admin-tab-btn" class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4 hidden" data-tab="admin">
-                <i class="fas fa-user-shield text-2xl mb-1"></i>
-                <span class="text-xs font-semibold">Админка</span>
+                <i class="fas fa-sliders-h text-2xl mb-1"></i>
+                <span class="text-xs font-semibold">Управление</span>
             </button>
             <button class="tab-btn tab-inactive btn-spring flex flex-col items-center py-2 px-4" data-tab="training">
                 <i class="fas fa-graduation-cap text-2xl mb-1"></i>
@@ -653,6 +695,7 @@
             initializeRevenueProgress();
             initializeLogout();
             initializeAdminPanel(); // ЗАДАЧА 3: Инициализация админ-панели
+            initializeRequestMoreTasksButton(); // Инициализация кнопки запроса задач
             updateUIWithUser();
             loadTasks();
         }
@@ -818,11 +861,13 @@
             const container = document.getElementById('products-container');
             const noTasksMsg = document.getElementById('no-tasks-message');
             const completionMsg = document.getElementById('completion-message');
+            const requestBtn = document.getElementById('request-more-tasks-btn');
             
             container.innerHTML = '';
             container.classList.remove('hidden');
             noTasksMsg.classList.add('hidden');
             completionMsg.classList.add('hidden');
+            if (requestBtn) requestBtn.classList.add('hidden');
             
             console.log('Рендеринг задач, количество:', tasksData.length);
             
@@ -835,6 +880,11 @@
                 const card = createTaskCard(task, index);
                 container.appendChild(card);
             });
+            
+            // Показываем кнопку запроса задач если есть задачи
+            if (requestBtn && tasksData.length > 0) {
+                requestBtn.classList.remove('hidden');
+            }
         }
         
         function createTaskCard(task, index) {
@@ -1578,24 +1628,24 @@
         }
         
         function initializeShiftModal() {
-            const submitShiftBtn = document.getElementById('submit-shift-btn');
-            if (submitShiftBtn) {
-                submitShiftBtn.addEventListener('click', function() {
-                    document.getElementById('shift-confirm-modal').classList.remove('hidden');
+            const submitMetricsBtn = document.getElementById('submit-metrics-btn');
+            if (submitMetricsBtn) {
+                submitMetricsBtn.addEventListener('click', function() {
+                    document.getElementById('metrics-confirm-modal').classList.remove('hidden');
                 });
             }
 
-            document.getElementById('shift-cancel-btn').addEventListener('click', function() {
-                document.getElementById('shift-confirm-modal').classList.add('hidden');
+            document.getElementById('metrics-cancel-btn').addEventListener('click', function() {
+                document.getElementById('metrics-confirm-modal').classList.add('hidden');
             });
 
-            document.getElementById('shift-confirm-btn-final').addEventListener('click', async function() {
-                document.getElementById('shift-confirm-modal').classList.add('hidden');
+            document.getElementById('metrics-confirm-btn-final').addEventListener('click', async function() {
+                document.getElementById('metrics-confirm-modal').classList.add('hidden');
                 
-                const submitShiftBtn = document.getElementById('submit-shift-btn');
-                const originalContent = submitShiftBtn.innerHTML;
-                submitShiftBtn.disabled = true;
-                submitShiftBtn.innerHTML = '<div class="spinner mx-auto"></div><span class="ml-2">Отправка отчета...</span>';
+                const submitMetricsBtn = document.getElementById('submit-metrics-btn');
+                const originalContent = submitMetricsBtn.innerHTML;
+                submitMetricsBtn.disabled = true;
+                submitMetricsBtn.innerHTML = '<div class="spinner mx-auto"></div><span class="ml-2">Отправка показателей...</span>';
                 
                 const udsConnected = parseInt(document.getElementById('uds-connected-input').value) || 0;
                 
@@ -1604,11 +1654,11 @@
                     udsConnected: udsConnected
                 });
                 
-                submitShiftBtn.disabled = false;
-                submitShiftBtn.innerHTML = originalContent;
+                submitMetricsBtn.disabled = false;
+                submitMetricsBtn.innerHTML = originalContent;
                 
                 if (result.success) {
-                    showToast('Отчет успешно отправлен руководителю!', 'success');
+                    showToast('Показатели успешно отправлены!', 'success');
                     
                     document.getElementById('uds-connected-input').value = '';
                     
@@ -1618,7 +1668,7 @@
                         updateProfileTab();
                     }
                 } else {
-                    showToast('Ошибка отправки отчета: ' + (result.error || 'Неизвестная ошибка'), 'error');
+                    showToast('Ошибка отправки показателей: ' + (result.error || 'Неизвестная ошибка'), 'error');
                 }
             });
         }
@@ -1713,6 +1763,66 @@
                         document.body.removeChild(textArea);
                     }
                 });
+            }
+            
+            // Кнопка ИИ-Аудитор
+            const auditBtn = document.getElementById('audit-logs-btn');
+            if (auditBtn) {
+                auditBtn.addEventListener('click', function() {
+                    showToast('Функция в разработке', 'info');
+                });
+            }
+            
+            // Кнопка ИИ-Нормализатор
+            const normalizeBtn = document.getElementById('normalize-names-btn');
+            if (normalizeBtn) {
+                normalizeBtn.addEventListener('click', function() {
+                    showToast('Функция в разработке', 'info');
+                });
+            }
+        }
+        
+        // ============================================
+        // КНОПКА ЗАПРОСА ДОПОЛНИТЕЛЬНЫХ ЗАДАЧ
+        // ============================================
+        
+        function initializeRequestMoreTasksButton() {
+            const requestBtn = document.getElementById('request-more-tasks-btn');
+            const requestBtnCompleted = document.getElementById('request-more-tasks-btn-completed');
+            
+            function handleRequestMoreTasks(btn) {
+                return async function() {
+                    const originalContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<div class="spinner mx-auto"></div><span class="ml-2">Загрузка задач...</span>';
+                    
+                    try {
+                        const result = await apiCall('assignDailyTasks', { tasksPerStore: 3 });
+                        
+                        if (result.success) {
+                            showToast('Очередь задач обновлена. Перезагрузка...', 'success');
+                            setTimeout(() => {
+                                loadTasks();
+                            }, 1500);
+                        } else {
+                            showToast('Ошибка: ' + (result.error || 'Не удалось загрузить задачи'), 'error');
+                            btn.disabled = false;
+                            btn.innerHTML = originalContent;
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения с сервером', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }
+                };
+            }
+            
+            if (requestBtn) {
+                requestBtn.addEventListener('click', handleRequestMoreTasks(requestBtn));
+            }
+            
+            if (requestBtnCompleted) {
+                requestBtnCompleted.addEventListener('click', handleRequestMoreTasks(requestBtnCompleted));
             }
         }
     </script>
