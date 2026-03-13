@@ -398,6 +398,19 @@
                 
                 <p class="text-gray-600 mb-4">Автоматическая генерация рекламных постов для распродажи неликвида через Gemini AI.</p>
                 
+                <!-- ЗАДАЧА 3: Выбор платформы -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Платформа для поста</label>
+                    <div class="flex gap-3">
+                        <button id="platform-vk-btn" class="platform-btn flex-1 btn-spring bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl border-2 border-blue-500">
+                            <i class="fab fa-vk mr-2"></i>ВКонтакте
+                        </button>
+                        <button id="platform-uds-btn" class="platform-btn flex-1 btn-spring bg-white text-gray-700 font-semibold py-3 px-4 rounded-xl border-2 border-gray-300">
+                            <i class="fas fa-gift mr-2"></i>UDS
+                        </button>
+                    </div>
+                </div>
+                
                 <button id="generate-post-btn" class="w-full btn-spring bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg mb-4">
                     <i class="fas fa-magic mr-2"></i>
                     Сгенерировать пост о неликвиде
@@ -426,6 +439,40 @@
                         </div>
                         <p id="ai-error-text" class="text-sm text-red-700"></p>
                     </div>
+                </div>
+            </div>
+            
+            <!-- ЗАДАЧА 4: Функции управления из Master таблицы -->
+            <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-cogs mr-2 text-blue-600"></i>
+                    Управление системой
+                </h3>
+                
+                <div class="space-y-3">
+                    <!-- Запустить парсер 1С -->
+                    <button id="run-parser-btn" class="w-full btn-spring bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-semibold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                        <span><i class="fas fa-play mr-2"></i>Запустить парсер 1С вручную</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <!-- Включить авто-парсер -->
+                    <button id="enable-parser-btn" class="w-full btn-spring bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                        <span><i class="fas fa-clock mr-2"></i>Включить ежедневный авто-парсер</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <!-- Выключить авто-парсер -->
+                    <button id="disable-parser-btn" class="w-full btn-spring bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                        <span><i class="fas fa-stop mr-2"></i>Выключить ежедневный авто-парсер</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <!-- Обновить очередь задач -->
+                    <button id="update-queue-btn" class="w-full btn-spring bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                        <span><i class="fas fa-sync-alt mr-2"></i>Обновить очередь задач (Daily Queue)</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
             
@@ -1678,6 +1725,30 @@
         // ============================================
         
         function initializeAdminPanel() {
+            // ЗАДАЧА 3: Выбор платформы для поста
+            let selectedPlatform = 'VK';
+            
+            const platformVkBtn = document.getElementById('platform-vk-btn');
+            const platformUdsBtn = document.getElementById('platform-uds-btn');
+            
+            if (platformVkBtn && platformUdsBtn) {
+                platformVkBtn.addEventListener('click', function() {
+                    selectedPlatform = 'VK';
+                    platformVkBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+                    platformVkBtn.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
+                    platformUdsBtn.classList.remove('bg-indigo-500', 'text-white', 'border-indigo-500');
+                    platformUdsBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+                });
+                
+                platformUdsBtn.addEventListener('click', function() {
+                    selectedPlatform = 'UDS';
+                    platformUdsBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+                    platformUdsBtn.classList.add('bg-indigo-500', 'text-white', 'border-indigo-500');
+                    platformVkBtn.classList.remove('bg-blue-500', 'text-white', 'border-blue-500');
+                    platformVkBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+                });
+            }
+            
             const generateBtn = document.getElementById('generate-post-btn');
             const copyBtn = document.getElementById('copy-post-btn');
             
@@ -1686,17 +1757,17 @@
                     // Блокируем кнопку и показываем спиннер
                     const originalContent = generateBtn.innerHTML;
                     generateBtn.disabled = true;
-                    generateBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Генерация поста...</span>';
+                    generateBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Генерация поста для ' + selectedPlatform + '...</span>';
                     
                     // Скрываем предыдущие результаты
                     document.getElementById('ai-result-container').classList.add('hidden');
                     document.getElementById('ai-error-container').classList.add('hidden');
                     
                     try {
-                        console.log('🤖 Запуск ИИ-маркетолога...');
+                        console.log('🤖 Запуск ИИ-маркетолога для платформы:', selectedPlatform);
                         
-                        // Вызываем API
-                        const result = await apiCall('runAIMarketer');
+                        // Вызываем API с выбранной платформой
+                        const result = await apiCall('runAIMarketer', { platform: selectedPlatform });
                         
                         console.log('Результат ИИ-маркетолога:', result);
                         
@@ -1705,10 +1776,11 @@
                             document.getElementById('ai-result-text').textContent = result.post;
                             document.getElementById('ai-result-meta').textContent = 
                                 '📊 Товаров обработано: ' + result.itemsCount + 
-                                (result.tokensUsed ? ' | Токенов использовано: ' + result.tokensUsed : '');
+                                (result.tokensUsed ? ' | Токенов использовано: ' + result.tokensUsed : '') +
+                                ' | Платформа: ' + selectedPlatform;
                             document.getElementById('ai-result-container').classList.remove('hidden');
                             
-                            showToast('Пост успешно сгенерирован!', 'success');
+                            showToast('Пост успешно сгенерирован для ' + selectedPlatform + '!', 'success');
                         } else {
                             // Показываем ошибку
                             document.getElementById('ai-error-text').textContent = result.error || 'Неизвестная ошибка';
@@ -1765,6 +1837,113 @@
                 });
             }
             
+            // ЗАДАЧА 4: Функции управления из Master таблицы
+            
+            // Запустить парсер 1С
+            const runParserBtn = document.getElementById('run-parser-btn');
+            if (runParserBtn) {
+                runParserBtn.addEventListener('click', async function() {
+                    if (!confirm('Запустить парсер 1С? Это может занять несколько минут.')) return;
+                    
+                    const originalContent = runParserBtn.innerHTML;
+                    runParserBtn.disabled = true;
+                    runParserBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Парсинг...</span>';
+                    
+                    try {
+                        const result = await apiCall('runParser');
+                        if (result.success) {
+                            showToast('Парсинг завершен! Обработано файлов: ' + result.filesProcessed, 'success');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        runParserBtn.disabled = false;
+                        runParserBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Включить авто-парсер
+            const enableParserBtn = document.getElementById('enable-parser-btn');
+            if (enableParserBtn) {
+                enableParserBtn.addEventListener('click', async function() {
+                    const hour = prompt('В какое время запускать парсер? (0-23 часов)', '9');
+                    if (hour === null) return;
+                    
+                    const originalContent = enableParserBtn.innerHTML;
+                    enableParserBtn.disabled = true;
+                    enableParserBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div>';
+                    
+                    try {
+                        const result = await apiCall('setupDailyParser', { hour: parseInt(hour) });
+                        if (result.success) {
+                            showToast('Авто-парсер включен на ' + hour + ':00', 'success');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        enableParserBtn.disabled = false;
+                        enableParserBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Выключить авто-парсер
+            const disableParserBtn = document.getElementById('disable-parser-btn');
+            if (disableParserBtn) {
+                disableParserBtn.addEventListener('click', async function() {
+                    if (!confirm('Выключить автоматический парсер?')) return;
+                    
+                    const originalContent = disableParserBtn.innerHTML;
+                    disableParserBtn.disabled = true;
+                    disableParserBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div>';
+                    
+                    try {
+                        const result = await apiCall('removeDailyParser');
+                        if (result.success) {
+                            showToast('Авто-парсер выключен', 'success');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        disableParserBtn.disabled = false;
+                        disableParserBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Обновить очередь задач
+            const updateQueueBtn = document.getElementById('update-queue-btn');
+            if (updateQueueBtn) {
+                updateQueueBtn.addEventListener('click', async function() {
+                    if (!confirm('Обновить очередь задач для всех магазинов?')) return;
+                    
+                    const originalContent = updateQueueBtn.innerHTML;
+                    updateQueueBtn.disabled = true;
+                    updateQueueBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Обновление...</span>';
+                    
+                    try {
+                        const result = await apiCall('requestMoreTasks', { tasksPerStore: 3 });
+                        if (result.success) {
+                            showToast('Очередь задач обновлена! Назначено: ' + result.totalAssigned, 'success');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        updateQueueBtn.disabled = false;
+                        updateQueueBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
             // Кнопка ИИ-Аудитор
             const auditBtn = document.getElementById('audit-logs-btn');
             if (auditBtn) {
@@ -1797,7 +1976,8 @@
                     btn.innerHTML = '<div class="spinner mx-auto"></div><span class="ml-2">Загрузка задач...</span>';
                     
                     try {
-                        const result = await apiCall('assignDailyTasks', { tasksPerStore: 3 });
+                        // ИСПРАВЛЕНИЕ ЗАДАЧИ 2: Используем правильный action
+                        const result = await apiCall('requestMoreTasks', { tasksPerStore: 3 });
                         
                         if (result.success) {
                             showToast('Очередь задач обновлена. Перезагрузка...', 'success');
