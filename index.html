@@ -396,42 +396,67 @@
                     ИИ-Маркетолог
                 </h3>
                 
-                <p class="text-gray-600 mb-4">Автоматическая генерация рекламных постов для распродажи неликвида через Gemini AI.</p>
+                <p class="text-gray-600 mb-4">Автоматическая генерация рекламных постов для распродажи через Gemini AI с учетом праздников и сезона.</p>
                 
-                <!-- ЗАДАЧА 3: Выбор платформы -->
-                <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Платформа для поста</label>
+                <!-- Шаг 1: Загрузка товаров -->
+                <div id="marketer-step1" class="">
+                    <button id="load-products-btn" class="w-full btn-spring bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">
+                        <i class="fas fa-box-open mr-2"></i>
+                        Загрузить товары моего магазина
+                    </button>
+                </div>
+                
+                <!-- Шаг 2: Выбор товаров галочками -->
+                <div id="marketer-step2" class="hidden">
+                    <h4 class="text-md font-bold text-gray-700 mb-3">Выберите товары для поста (до 10 шт.):</h4>
+                    
+                    <div id="products-list" class="max-h-96 overflow-y-auto bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+                        <!-- Товары загружаются динамически -->
+                    </div>
+                    
                     <div class="flex gap-3">
-                        <button id="platform-vk-btn" class="platform-btn flex-1 btn-spring bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl border-2 border-blue-500">
-                            <i class="fab fa-vk mr-2"></i>ВКонтакте
+                        <button id="cancel-selection-btn" class="flex-1 btn-spring bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl">
+                            Отмена
                         </button>
-                        <button id="platform-uds-btn" class="platform-btn flex-1 btn-spring bg-white text-gray-700 font-semibold py-3 px-4 rounded-xl border-2 border-gray-300">
-                            <i class="fas fa-gift mr-2"></i>UDS
+                        <button id="generate-with-selection-btn" class="flex-1 btn-spring bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3 rounded-xl">
+                            <i class="fas fa-magic mr-2"></i>
+                            Сгенерировать пост
                         </button>
                     </div>
                 </div>
                 
-                <button id="generate-post-btn" class="w-full btn-spring bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg mb-4">
-                    <i class="fas fa-magic mr-2"></i>
-                    Сгенерировать пост о неликвиде
-                </button>
-                
                 <!-- Результат генерации -->
-                <div id="ai-result-container" class="hidden">
+                <div id="ai-result-container" class="hidden mt-4">
                     <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 border-2 border-purple-200">
                         <div class="flex items-center justify-between mb-3">
                             <h4 class="text-sm font-bold text-purple-800 uppercase tracking-wide">Сгенерированный пост</h4>
-                            <button id="copy-post-btn" class="btn-spring bg-white hover:bg-purple-100 text-purple-600 px-3 py-1 rounded-lg text-sm font-semibold shadow-sm">
-                                <i class="fas fa-copy mr-1"></i>Копировать
-                            </button>
+                            <div class="flex gap-2">
+                                <button id="edit-post-btn" class="btn-spring bg-white hover:bg-purple-100 text-purple-600 px-3 py-1 rounded-lg text-sm font-semibold shadow-sm">
+                                    <i class="fas fa-edit mr-1"></i>Редактировать
+                                </button>
+                                <button id="copy-post-btn" class="btn-spring bg-white hover:bg-purple-100 text-purple-600 px-3 py-1 rounded-lg text-sm font-semibold shadow-sm">
+                                    <i class="fas fa-copy mr-1"></i>Копировать
+                                </button>
+                            </div>
                         </div>
                         <div id="ai-result-text" class="bg-white rounded-xl p-4 text-gray-800 whitespace-pre-wrap text-sm leading-relaxed shadow-sm"></div>
+                        <textarea id="ai-result-edit" class="hidden w-full bg-white rounded-xl p-4 text-gray-800 text-sm leading-relaxed shadow-sm border-2 border-purple-300 focus:border-purple-500 focus:outline-none" rows="10"></textarea>
                         <div id="ai-result-meta" class="mt-3 text-xs text-purple-600 font-medium"></div>
+                        
+                        <!-- Кнопки для режима редактирования -->
+                        <div id="edit-buttons" class="hidden mt-3 flex gap-2">
+                            <button id="save-edit-btn" class="flex-1 btn-spring bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 rounded-lg">
+                                <i class="fas fa-check mr-1"></i>Сохранить
+                            </button>
+                            <button id="cancel-edit-btn" class="flex-1 btn-spring bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 rounded-lg">
+                                <i class="fas fa-times mr-1"></i>Отмена
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Сообщение об ошибке -->
-                <div id="ai-error-container" class="hidden">
+                <div id="ai-error-container" class="hidden mt-4">
                     <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-4">
                         <div class="flex items-center mb-2">
                             <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
@@ -1783,88 +1808,196 @@
         // ============================================
         
         function initializeAdminPanel() {
-            // ЗАДАЧА 3: Выбор платформы для поста
-            let selectedPlatform = 'VK';
+            // ИИ-Маркетолог V2 с выбором товаров
+            let availableProducts = [];
+            let selectedProducts = [];
             
-            const platformVkBtn = document.getElementById('platform-vk-btn');
-            const platformUdsBtn = document.getElementById('platform-uds-btn');
+            const loadProductsBtn = document.getElementById('load-products-btn');
+            const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
+            const generateWithSelectionBtn = document.getElementById('generate-with-selection-btn');
+            const editPostBtn = document.getElementById('edit-post-btn');
+            const saveEditBtn = document.getElementById('save-edit-btn');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
             
-            if (platformVkBtn && platformUdsBtn) {
-                platformVkBtn.addEventListener('click', function() {
-                    selectedPlatform = 'VK';
-                    platformVkBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
-                    platformVkBtn.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
-                    platformUdsBtn.classList.remove('bg-indigo-500', 'text-white', 'border-indigo-500');
-                    platformUdsBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
-                });
-                
-                platformUdsBtn.addEventListener('click', function() {
-                    selectedPlatform = 'UDS';
-                    platformUdsBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
-                    platformUdsBtn.classList.add('bg-indigo-500', 'text-white', 'border-indigo-500');
-                    platformVkBtn.classList.remove('bg-blue-500', 'text-white', 'border-blue-500');
-                    platformVkBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
-                });
-            }
-            
-            const generateBtn = document.getElementById('generate-post-btn');
-            const copyBtn = document.getElementById('copy-post-btn');
-            
-            if (generateBtn) {
-                generateBtn.addEventListener('click', async function() {
-                    // Блокируем кнопку и показываем спиннер
-                    const originalContent = generateBtn.innerHTML;
-                    generateBtn.disabled = true;
-                    generateBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Генерация поста для ' + selectedPlatform + '...</span>';
+            // Загрузка товаров магазина
+            if (loadProductsBtn) {
+                loadProductsBtn.addEventListener('click', async function() {
+                    if (!currentUser || !currentUser.store) {
+                        showToast('Ошибка: не определен магазин', 'error');
+                        return;
+                    }
                     
-                    // Скрываем предыдущие результаты
-                    document.getElementById('ai-result-container').classList.add('hidden');
-                    document.getElementById('ai-error-container').classList.add('hidden');
+                    const originalContent = loadProductsBtn.innerHTML;
+                    loadProductsBtn.disabled = true;
+                    loadProductsBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Загрузка товаров...</span>';
                     
                     try {
-                        console.log('🤖 Запуск ИИ-маркетолога для платформы:', selectedPlatform);
+                        const result = await apiCall('getDeadStockByStore', { storeName: currentUser.store });
                         
-                        // Вызываем API с выбранной платформой
-                        const result = await apiCall('runAIMarketer', { platform: selectedPlatform });
-                        
-                        console.log('Результат ИИ-маркетолога:', result);
-                        
-                        if (result.success) {
-                            // Показываем результат
-                            document.getElementById('ai-result-text').textContent = result.post;
-                            document.getElementById('ai-result-meta').textContent = 
-                                '📊 Товаров обработано: ' + result.itemsCount + 
-                                (result.tokensUsed ? ' | Токенов использовано: ' + result.tokensUsed : '') +
-                                ' | Платформа: ' + selectedPlatform;
-                            document.getElementById('ai-result-container').classList.remove('hidden');
+                        if (result.success && result.items && result.items.length > 0) {
+                            availableProducts = result.items;
+                            renderProductsList(result.items);
                             
-                            showToast('Пост успешно сгенерирован для ' + selectedPlatform + '!', 'success');
+                            document.getElementById('marketer-step1').classList.add('hidden');
+                            document.getElementById('marketer-step2').classList.remove('hidden');
+                            
+                            showToast('Загружено товаров: ' + result.count, 'success');
                         } else {
-                            // Показываем ошибку
-                            document.getElementById('ai-error-text').textContent = result.error || 'Неизвестная ошибка';
-                            document.getElementById('ai-error-container').classList.remove('hidden');
-                            
-                            showToast('Ошибка генерации поста', 'error');
+                            showToast('Нет товаров для рекламы в вашем магазине', 'error');
                         }
                     } catch (error) {
-                        console.error('Ошибка вызова ИИ-маркетолога:', error);
-                        document.getElementById('ai-error-text').textContent = error.message;
-                        document.getElementById('ai-error-container').classList.remove('hidden');
-                        showToast('Ошибка соединения с сервером', 'error');
+                        showToast('Ошибка загрузки товаров', 'error');
                     } finally {
-                        // Разблокируем кнопку
-                        generateBtn.disabled = false;
-                        generateBtn.innerHTML = originalContent;
+                        loadProductsBtn.disabled = false;
+                        loadProductsBtn.innerHTML = originalContent;
                     }
                 });
             }
             
+            // Отрисовка списка товаров с чекбоксами
+            function renderProductsList(products) {
+                const container = document.getElementById('products-list');
+                container.innerHTML = '';
+                
+                products.forEach((product, index) => {
+                    const item = document.createElement('label');
+                    item.className = 'flex items-center p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-purple-300 cursor-pointer transition-all';
+                    
+                    item.innerHTML = `
+                        <input type="checkbox" class="product-checkbox w-5 h-5 text-purple-600 rounded mr-3" data-index="${index}">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">${product.name}</div>
+                            <div class="text-sm text-gray-600">Остаток: ${product.qty} шт. | Цена: ${Math.round(product.price)} ₽</div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+                
+                // Обработчик изменения чекбоксов
+                document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const index = parseInt(this.dataset.index);
+                        
+                        if (this.checked) {
+                            if (selectedProducts.length >= 10) {
+                                this.checked = false;
+                                showToast('Максимум 10 товаров', 'error');
+                                return;
+                            }
+                            selectedProducts.push(products[index]);
+                        } else {
+                            selectedProducts = selectedProducts.filter(p => p.id !== products[index].id);
+                        }
+                        
+                        console.log('Выбрано товаров:', selectedProducts.length);
+                    });
+                });
+            }
+            
+            // Отмена выбора
+            if (cancelSelectionBtn) {
+                cancelSelectionBtn.addEventListener('click', function() {
+                    selectedProducts = [];
+                    document.getElementById('marketer-step2').classList.add('hidden');
+                    document.getElementById('marketer-step1').classList.remove('hidden');
+                });
+            }
+            
+            // Генерация поста с выбранными товарами
+            if (generateWithSelectionBtn) {
+                generateWithSelectionBtn.addEventListener('click', async function() {
+                    if (selectedProducts.length === 0) {
+                        showToast('Выберите хотя бы один товар', 'error');
+                        return;
+                    }
+                    
+                    const originalContent = generateWithSelectionBtn.innerHTML;
+                    generateWithSelectionBtn.disabled = true;
+                    generateWithSelectionBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Генерация...</span>';
+                    
+                    document.getElementById('ai-result-container').classList.add('hidden');
+                    document.getElementById('ai-error-container').classList.add('hidden');
+                    
+                    try {
+                        console.log('Генерация поста для товаров:', selectedProducts);
+                        
+                        const result = await apiCall('generateMarketingPostV2', { selectedItems: selectedProducts });
+                        
+                        if (result.success) {
+                            document.getElementById('ai-result-text').textContent = result.post;
+                            document.getElementById('ai-result-edit').value = result.post;
+                            document.getElementById('ai-result-meta').textContent = 
+                                '📊 Товаров: ' + selectedProducts.length + 
+                                (result.tokensUsed ? ' | Токенов: ' + result.tokensUsed : '');
+                            document.getElementById('ai-result-container').classList.remove('hidden');
+                            
+                            // Скрываем шаг выбора
+                            document.getElementById('marketer-step2').classList.add('hidden');
+                            
+                            showToast('Пост успешно сгенерирован!', 'success');
+                        } else {
+                            document.getElementById('ai-error-text').textContent = result.error || 'Неизвестная ошибка';
+                            document.getElementById('ai-error-container').classList.remove('hidden');
+                            showToast('Ошибка генерации поста', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Ошибка:', error);
+                        document.getElementById('ai-error-text').textContent = error.message;
+                        document.getElementById('ai-error-container').classList.remove('hidden');
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        generateWithSelectionBtn.disabled = false;
+                        generateWithSelectionBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Редактирование поста
+            if (editPostBtn) {
+                editPostBtn.addEventListener('click', function() {
+                    document.getElementById('ai-result-text').classList.add('hidden');
+                    document.getElementById('ai-result-edit').classList.remove('hidden');
+                    document.getElementById('edit-buttons').classList.remove('hidden');
+                    editPostBtn.classList.add('hidden');
+                });
+            }
+            
+            // Сохранение отредактированного поста
+            if (saveEditBtn) {
+                saveEditBtn.addEventListener('click', function() {
+                    const editedText = document.getElementById('ai-result-edit').value;
+                    document.getElementById('ai-result-text').textContent = editedText;
+                    
+                    document.getElementById('ai-result-text').classList.remove('hidden');
+                    document.getElementById('ai-result-edit').classList.add('hidden');
+                    document.getElementById('edit-buttons').classList.add('hidden');
+                    editPostBtn.classList.remove('hidden');
+                    
+                    showToast('Изменения сохранены', 'success');
+                });
+            }
+            
+            // Отмена редактирования
+            if (cancelEditBtn) {
+                cancelEditBtn.addEventListener('click', function() {
+                    // Восстанавливаем оригинальный текст
+                    const originalText = document.getElementById('ai-result-text').textContent;
+                    document.getElementById('ai-result-edit').value = originalText;
+                    
+                    document.getElementById('ai-result-text').classList.remove('hidden');
+                    document.getElementById('ai-result-edit').classList.add('hidden');
+                    document.getElementById('edit-buttons').classList.add('hidden');
+                    editPostBtn.classList.remove('hidden');
+                });
+            }
+            
             // Кнопка копирования поста
+            const copyBtn = document.getElementById('copy-post-btn');
             if (copyBtn) {
                 copyBtn.addEventListener('click', function() {
                     const postText = document.getElementById('ai-result-text').textContent;
                     
-                    // Копируем в буфер обмена
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                         navigator.clipboard.writeText(postText).then(() => {
                             showToast('Пост скопирован в буфер обмена!', 'success');
@@ -1877,7 +2010,6 @@
                             showToast('Ошибка копирования', 'error');
                         });
                     } else {
-                        // Fallback для старых браузеров
                         const textArea = document.createElement('textarea');
                         textArea.value = postText;
                         textArea.style.position = 'fixed';
