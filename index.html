@@ -1631,12 +1631,29 @@
                     qtyInput.classList.add('border-emerald-500', 'bg-emerald-50');
                     showToast('Остаток обновлен!', 'success');
 
-                    // Возвращаем галочку
+                    // Показываем галочку и РАЗБЛОКИРУЕМ кнопку для повторного редактирования
                     setTimeout(() => {
                         button.innerHTML = '<i class="fas fa-check text-white"></i>';
                         button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                        button.classList.add('bg-emerald-500');
+                        button.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+                        button.disabled = false; // РАЗБЛОКИРУЕМ для повторного использования
                     }, 300);
+                    
+                    // Помечаем, что обработчик уже добавлен
+                    if (!qtyInput.dataset.hasInputListener) {
+                        qtyInput.dataset.hasInputListener = 'true';
+                        
+                        // Добавляем обработчик изменения поля - при изменении кнопка снова становится синей
+                        qtyInput.addEventListener('input', function() {
+                            const btn = card.querySelector('.qty-confirm-btn');
+                            if (btn) {
+                                btn.innerHTML = '<i class="fas fa-check"></i>';
+                                btn.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
+                                btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                            }
+                            qtyInput.classList.remove('border-emerald-500', 'bg-emerald-50');
+                        });
+                    }
                 } else {
                     throw new Error(result.error || 'Ошибка обновления');
                 }
