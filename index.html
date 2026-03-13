@@ -1064,6 +1064,7 @@
             html += '</button>';
             html += '</div>';
             html += '</div>';
+            
             // ЗАДАЧА 1: Кнопка фото только если товар НЕ оцифрован
             if (!task.hasPhoto || !task.photoBase64) {
                 html += '<div class="photo-button-container mb-4">';
@@ -1072,7 +1073,6 @@
                 html += '<div class="text-sm mt-1 font-semibold">+10 ₽ бонус</div>';
                 html += '</button>';
                 html += '</div>';
-                html += '<div class="action-buttons flex w-full opacity-40 pointer-events-none">';
             } else {
                 // Если фото уже есть, показываем кнопку "Переделать фото"
                 html += '<div class="photo-button-container mb-4">';
@@ -1081,11 +1081,14 @@
                 html += 'Переделать фото';
                 html += '</button>';
                 html += '</div>';
-                html += '<div class="action-buttons flex w-full">';
             }
             
-            // ЗАДАЧА 1: Только одна кнопка "Продать" на всю ширину
+            // Блок кнопок действий (Продать) - блокируется если нет фото
             const hasPhotoForActions = task.hasPhoto && task.photoBase64;
+            const actionButtonsClass = !hasPhotoForActions ? 'action-buttons flex w-full opacity-40 pointer-events-none' : 'action-buttons flex w-full';
+            html += '<div class="' + actionButtonsClass + '">';
+            
+            // ЗАДАЧА 1: Только одна кнопка "Продать" на всю ширину
             const disabledAttr = !hasPhotoForActions ? ' disabled' : '';
             html += '<button class="action-btn btn-spring bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg w-full active:scale-95 transition-transform" data-action="sell"' + disabledAttr + '>';
             html += '<i class="fas fa-check-circle text-2xl mr-2"></i>Продать';
