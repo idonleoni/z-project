@@ -1421,7 +1421,7 @@
                 
                 const originalHtml = uploadBtn.innerHTML;
                 uploadBtn.disabled = true;
-                uploadBtn.innerHTML = '<div class="spinner mx-auto w-6 h-6 border-white/50 border-t-white"></div>';
+                uploadBtn.innerHTML = '<div class="spinner mx-auto w-6 h-6 border-white/50 border-t-white"></div><span class="ml-2 text-xs">Проверка ИИ...</span>';
                 
                 const redoBtn = card.querySelector('.redo-temp-btn');
                 if (redoBtn) redoBtn.disabled = true;
@@ -1491,7 +1491,22 @@
                     uploadBtn.innerHTML = originalHtml;
                     if (redoBtn) redoBtn.disabled = false;
                     
-                    if (error.message.includes('уже оцифровано')) {
+                    // Специальная обработка для ошибок модерации ИИ
+                    if (error.message.includes('ИИ отклонил фото')) {
+                        // Показываем красный бейдж на фото
+                        const photoContainer = card.querySelector('.photo-preview-container');
+                        if (photoContainer) {
+                            const errorBadge = document.createElement('div');
+                            errorBadge.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg fade-in';
+                            errorBadge.innerHTML = '<i class="fas fa-times text-xl"></i>';
+                            photoContainer.appendChild(errorBadge);
+                            
+                            // Удаляем бейдж через 3 секунды
+                            setTimeout(() => errorBadge.remove(), 3000);
+                        }
+                        
+                        showToast('🤖 ' + error.message, 'error');
+                    } else if (error.message.includes('уже оцифровано')) {
                         showToast('⚠️ ' + error.message, 'error');
                     } else {
                         showToast('Ошибка: ' + error.message, 'error');
