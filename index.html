@@ -476,6 +476,51 @@
                 </div>
             </div>
             
+            <!-- ЗАДАЧА 1: Раздел Диагностика -->
+            <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-stethoscope mr-2 text-teal-600"></i>
+                    Диагностика системы
+                </h3>
+                
+                <div class="space-y-3">
+                    <!-- Полная диагностика -->
+                    <button id="run-diagnostics-btn" class="w-full btn-spring bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-semibold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                        <span><i class="fas fa-heartbeat mr-2"></i>Полная диагностика системы</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <!-- Задачи без фото -->
+                    <button id="check-photos-btn" class="w-full btn-spring bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                        <span><i class="fas fa-camera mr-2"></i>Задачи без фото</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <!-- Активность сотрудников -->
+                    <button id="check-activity-btn" class="w-full btn-spring bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                        <span><i class="fas fa-users mr-2"></i>Активность сотрудников</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <!-- Последние действия -->
+                    <button id="check-actions-btn" class="w-full btn-spring bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                        <span><i class="fas fa-history mr-2"></i>Последние 10 действий</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Результаты диагностики -->
+                <div id="diagnostics-result" class="hidden mt-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Результаты</h4>
+                        <button id="close-diagnostics-btn" class="text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center transition-all">
+                            <i class="fas fa-times text-sm"></i>
+                        </button>
+                    </div>
+                    <div id="diagnostics-text" class="bg-white rounded-xl p-4 text-gray-800 text-sm leading-relaxed shadow-sm max-h-96 overflow-y-auto" style="white-space: pre-wrap;"></div>
+                </div>
+            </div>
+            
             <!-- ИИ-Аудитор -->
             <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
@@ -483,12 +528,25 @@
                     ИИ-Аудитор (Ночной контроль)
                 </h3>
                 
-                <p class="text-gray-600 mb-4">Анализ подозрительных действий персонала за день.</p>
+                <p class="text-gray-600 mb-4">Анализ подозрительных действий персонала за день через ИИ.</p>
                 
                 <button id="audit-logs-btn" class="w-full btn-spring bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg">
                     <i class="fas fa-search mr-2"></i>
                     Запустить аудит логов
                 </button>
+                
+                <!-- Результат аудита -->
+                <div id="audit-result-container" class="hidden mt-4">
+                    <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-4 border-2 border-red-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-bold text-red-800 uppercase tracking-wide">Рапорт аудитора</h4>
+                            <button id="close-audit-btn" class="text-red-400 hover:text-red-700 hover:bg-red-100 rounded-full w-6 h-6 flex items-center justify-center transition-all">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+                        </div>
+                        <div id="audit-result-text" class="bg-white rounded-xl p-4 text-gray-800 whitespace-pre-wrap text-sm leading-relaxed shadow-sm"></div>
+                    </div>
+                </div>
             </div>
             
             <!-- ИИ-Нормализатор 1С -->
@@ -1946,9 +2004,246 @@
             
             // Кнопка ИИ-Аудитор
             const auditBtn = document.getElementById('audit-logs-btn');
+            const closeAuditBtn = document.getElementById('close-audit-btn');
+            
             if (auditBtn) {
-                auditBtn.addEventListener('click', function() {
-                    showToast('Функция в разработке', 'info');
+                auditBtn.addEventListener('click', async function() {
+                    const originalContent = auditBtn.innerHTML;
+                    auditBtn.disabled = true;
+                    auditBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Анализ логов...</span>';
+                    
+                    document.getElementById('audit-result-container').classList.add('hidden');
+                    
+                    try {
+                        const result = await apiCall('runAIAuditor');
+                        
+                        if (result.success) {
+                            document.getElementById('audit-result-text').textContent = result.report || 'Нет данных для аудита';
+                            document.getElementById('audit-result-container').classList.remove('hidden');
+                            showToast('Аудит завершен', 'success');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        auditBtn.disabled = false;
+                        auditBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            if (closeAuditBtn) {
+                closeAuditBtn.addEventListener('click', function() {
+                    document.getElementById('audit-result-container').classList.add('hidden');
+                });
+            }
+            
+            // ЗАДАЧА 1: Обработчики кнопок диагностики
+            
+            // Полная диагностика
+            const runDiagnosticsBtn = document.getElementById('run-diagnostics-btn');
+            if (runDiagnosticsBtn) {
+                runDiagnosticsBtn.addEventListener('click', async function() {
+                    const originalContent = runDiagnosticsBtn.innerHTML;
+                    runDiagnosticsBtn.disabled = true;
+                    runDiagnosticsBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div><span class="ml-2">Диагностика...</span>';
+                    
+                    try {
+                        const result = await apiCall('runDiagnostics');
+                        
+                        if (result) {
+                            let text = '=== СИСТЕМНАЯ ДИАГНОСТИКА ===\n\n';
+                            
+                            // Конфигурация
+                            if (result.config) {
+                                text += '📋 КОНФИГУРАЦИЯ\n';
+                                text += result.config.success ? '✅ Все настройки в порядке\n' : '⚠️ Есть проблемы\n';
+                                if (result.config.issues && result.config.issues.length > 0) {
+                                    result.config.issues.forEach(issue => text += '  ' + issue + '\n');
+                                }
+                                text += '\n';
+                            }
+                            
+                            // Листы
+                            if (result.sheets) {
+                                text += '📊 СТРУКТУРА ЛИСТОВ\n';
+                                if (result.sheets.stats) {
+                                    for (const sheetName in result.sheets.stats) {
+                                        const stat = result.sheets.stats[sheetName];
+                                        text += stat.exists ? '✅ ' : '⚠️ ';
+                                        text += sheetName + ': ' + stat.rows + ' строк\n';
+                                    }
+                                }
+                                text += '\n';
+                            }
+                            
+                            // Данные
+                            if (result.data && result.data.stats) {
+                                text += '🔍 ДАННЫЕ\n';
+                                if (result.data.stats.queue) {
+                                    text += '📦 Очередь задач: ' + result.data.stats.queue.total + ' задач\n';
+                                    text += '   С фото: ' + result.data.stats.queue.withPhoto + '\n';
+                                    text += '   Завершено: ' + result.data.stats.queue.completed + '\n';
+                                }
+                                if (result.data.stats.users) {
+                                    text += '👥 Сотрудников: ' + result.data.stats.users + '\n';
+                                }
+                                if (result.data.stats.photos) {
+                                    text += '📸 Фото в базе: ' + result.data.stats.photos + '\n';
+                                }
+                                text += '\n';
+                            }
+                            
+                            // ИИ
+                            if (result.ai) {
+                                text += '🤖 ИИ-ИНТЕГРАЦИЯ\n';
+                                text += result.ai.success ? '✅ Gemini API настроен\n' : '❌ Gemini API не настроен\n';
+                                if (result.ai.features) {
+                                    text += '   Модерация фото: ' + (result.ai.features.vision ? '✅' : '❌') + '\n';
+                                    text += '   Нормализатор: ' + (result.ai.features.normalizer ? '✅' : '❌') + '\n';
+                                    text += '   Аудитор: ' + (result.ai.features.auditor ? '✅' : '❌') + '\n';
+                                    text += '   Ассистент: ' + (result.ai.features.assistant ? '✅' : '❌') + '\n';
+                                    text += '   Маркетолог: ' + (result.ai.features.marketer ? '✅' : '❌') + '\n';
+                                }
+                            }
+                            
+                            document.getElementById('diagnostics-text').textContent = text;
+                            document.getElementById('diagnostics-result').classList.remove('hidden');
+                            showToast('Диагностика завершена', 'success');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        runDiagnosticsBtn.disabled = false;
+                        runDiagnosticsBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Задачи без фото
+            const checkPhotosBtn = document.getElementById('check-photos-btn');
+            if (checkPhotosBtn) {
+                checkPhotosBtn.addEventListener('click', async function() {
+                    const originalContent = checkPhotosBtn.innerHTML;
+                    checkPhotosBtn.disabled = true;
+                    checkPhotosBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div>';
+                    
+                    try {
+                        const result = await apiCall('checkTasksWithoutPhotos');
+                        
+                        if (result.success) {
+                            let text = '📸 ЗАДАЧИ БЕЗ ФОТО\n\n';
+                            text += 'Всего без фото: ' + result.count + ' товаров\n\n';
+                            
+                            if (result.items && result.items.length > 0) {
+                                result.items.forEach((item, index) => {
+                                    text += (index + 1) + '. [' + item.artikul + '] ' + item.name + '\n';
+                                });
+                            } else {
+                                text += '✅ Все задачи с фото!';
+                            }
+                            
+                            document.getElementById('diagnostics-text').textContent = text;
+                            document.getElementById('diagnostics-result').classList.remove('hidden');
+                            showToast('Проверка завершена', 'success');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        checkPhotosBtn.disabled = false;
+                        checkPhotosBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Активность сотрудников
+            const checkActivityBtn = document.getElementById('check-activity-btn');
+            if (checkActivityBtn) {
+                checkActivityBtn.addEventListener('click', async function() {
+                    const originalContent = checkActivityBtn.innerHTML;
+                    checkActivityBtn.disabled = true;
+                    checkActivityBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div>';
+                    
+                    try {
+                        const result = await apiCall('checkUserActivity');
+                        
+                        if (result.success) {
+                            let text = '👥 АКТИВНОСТЬ СОТРУДНИКОВ\n\n';
+                            
+                            if (result.users && result.users.length > 0) {
+                                result.users.forEach(user => {
+                                    text += user.userId + ':\n';
+                                    text += '  Оцифровано: ' + user.digitized + ' товаров\n';
+                                    text += '  Бонусы: ' + user.bonus + ' ₽\n';
+                                    text += '  UDS клиентов: ' + user.udsClients + '\n\n';
+                                });
+                            } else {
+                                text += '⚠️ Нет данных по сотрудникам';
+                            }
+                            
+                            document.getElementById('diagnostics-text').textContent = text;
+                            document.getElementById('diagnostics-result').classList.remove('hidden');
+                            showToast('Проверка завершена', 'success');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        checkActivityBtn.disabled = false;
+                        checkActivityBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Последние действия
+            const checkActionsBtn = document.getElementById('check-actions-btn');
+            if (checkActionsBtn) {
+                checkActionsBtn.addEventListener('click', async function() {
+                    const originalContent = checkActionsBtn.innerHTML;
+                    checkActionsBtn.disabled = true;
+                    checkActionsBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div>';
+                    
+                    try {
+                        const result = await apiCall('checkRecentActions', { limit: 10 });
+                        
+                        if (result.success) {
+                            let text = '📋 ПОСЛЕДНИЕ 10 ДЕЙСТВИЙ\n\n';
+                            
+                            if (result.actions && result.actions.length > 0) {
+                                result.actions.forEach(action => {
+                                    text += '[' + action.date + '] ' + action.user + '\n';
+                                    text += '  Действие: ' + action.action + '\n';
+                                    text += '  Товар: ' + action.product + '\n';
+                                    text += '  Бонус: ' + action.bonus + ' ₽\n\n';
+                                });
+                            } else {
+                                text += '⚠️ Журнал действий пуст';
+                            }
+                            
+                            document.getElementById('diagnostics-text').textContent = text;
+                            document.getElementById('diagnostics-result').classList.remove('hidden');
+                            showToast('Проверка завершена', 'success');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        checkActionsBtn.disabled = false;
+                        checkActionsBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Закрыть результаты диагностики
+            const closeDiagnosticsBtn = document.getElementById('close-diagnostics-btn');
+            if (closeDiagnosticsBtn) {
+                closeDiagnosticsBtn.addEventListener('click', function() {
+                    document.getElementById('diagnostics-result').classList.add('hidden');
                 });
             }
             
@@ -1981,6 +2276,9 @@
                         
                         if (result.success) {
                             showToast('Очередь задач обновлена. Перезагрузка...', 'success');
+                            // ИСПРАВЛЕНИЕ ЗАДАЧИ 2: Восстанавливаем кнопку перед перезагрузкой
+                            btn.disabled = false;
+                            btn.innerHTML = originalContent;
                             setTimeout(() => {
                                 loadTasks();
                             }, 1500);
