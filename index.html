@@ -1044,7 +1044,7 @@
             html += '<h3 class="text-lg font-bold text-gray-800 mb-2">' + task.name + '</h3>';
             html += '<div class="flex justify-between items-center mb-4">';
             html += '<div class="text-2xl font-bold text-[#E31E24]">' + Math.round(task.price).toLocaleString('ru-RU') + ' ₽</div>';
-            html += '<div class="text-sm text-gray-600 font-semibold">Остаток: ' + task.qty + ' шт.</div>';
+            html += '<div class="qty-display text-sm text-gray-600 font-semibold">Остаток: ' + task.qty + ' шт.</div>';
             html += '</div>';
             
             // Дней в неликвиде (если больше 0)
@@ -1629,6 +1629,19 @@
                 if (result.success) {
                     // Подкрашиваем поле ввода в зеленый
                     qtyInput.classList.add('border-emerald-500', 'bg-emerald-50');
+                    
+                    // Обновляем текст "Остаток: X шт." в карточке
+                    const qtyDisplay = card.querySelector('.qty-display');
+                    if (qtyDisplay) {
+                        qtyDisplay.textContent = 'Остаток: ' + newQty + ' шт.';
+                    }
+                    
+                    // Обновляем данные в tasksData
+                    const taskIndex = tasksData.findIndex(t => t.id === taskId);
+                    if (taskIndex !== -1) {
+                        tasksData[taskIndex].qty = newQty;
+                    }
+                    
                     showToast('Остаток обновлен!', 'success');
 
                     // Показываем галочку и РАЗБЛОКИРУЕМ кнопку для повторного редактирования
