@@ -501,6 +501,62 @@
                 </div>
             </div>
             
+            <!-- Автоматическое обновление задач -->
+            <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-clock mr-2 text-indigo-600"></i>
+                    Автообновление задач
+                </h3>
+                
+                <p class="text-gray-600 mb-4 text-sm">Настройте автоматическое обновление очереди задач раз в сутки в выбранное время.</p>
+                
+                <!-- Выбор времени -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Время обновления (час)</label>
+                    <select id="tasks-schedule-hour" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none text-lg">
+                        <option value="0">00:00 (полночь)</option>
+                        <option value="1">01:00</option>
+                        <option value="2">02:00</option>
+                        <option value="3">03:00</option>
+                        <option value="4">04:00</option>
+                        <option value="5">05:00</option>
+                        <option value="6">06:00</option>
+                        <option value="7">07:00</option>
+                        <option value="8">08:00</option>
+                        <option value="9">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00 (полдень)</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                        <option value="23">23:00</option>
+                    </select>
+                </div>
+                
+                <div class="flex gap-3">
+                    <!-- Включить автообновление -->
+                    <button id="enable-tasks-schedule-btn" class="flex-1 btn-spring bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-xl">
+                        <i class="fas fa-play mr-2"></i>Включить
+                    </button>
+                    
+                    <!-- Выключить автообновление -->
+                    <button id="disable-tasks-schedule-btn" class="flex-1 btn-spring bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-4 rounded-xl">
+                        <i class="fas fa-stop mr-2"></i>Выключить
+                    </button>
+                </div>
+                
+                <!-- Статус -->
+                <div id="tasks-schedule-status" class="hidden mt-4 p-3 rounded-xl text-sm font-medium"></div>
+            </div>
+            
             <!-- ЗАДАЧА 1: Раздел Диагностика -->
             <div class="bg-white rounded-3xl shadow-sm p-6 mb-4 border border-gray-100">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
@@ -2197,6 +2253,70 @@
                     } finally {
                         updateQueueBtn.disabled = false;
                         updateQueueBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Включить автообновление задач
+            const enableTasksScheduleBtn = document.getElementById('enable-tasks-schedule-btn');
+            const tasksScheduleHour = document.getElementById('tasks-schedule-hour');
+            const tasksScheduleStatus = document.getElementById('tasks-schedule-status');
+            
+            if (enableTasksScheduleBtn && tasksScheduleHour) {
+                enableTasksScheduleBtn.addEventListener('click', async function() {
+                    const hour = parseInt(tasksScheduleHour.value);
+                    
+                    if (!confirm('Включить автоматическое обновление задач каждый день в ' + hour + ':00?')) return;
+                    
+                    const originalContent = enableTasksScheduleBtn.innerHTML;
+                    enableTasksScheduleBtn.disabled = true;
+                    enableTasksScheduleBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div>';
+                    
+                    try {
+                        const result = await apiCall('setupTasksSchedule', { hour: hour });
+                        if (result.success) {
+                            showToast('Автообновление включено на ' + hour + ':00', 'success');
+                            tasksScheduleStatus.className = 'mt-4 p-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+                            tasksScheduleStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Активно: задачи обновляются каждый день в ' + hour + ':00';
+                            tasksScheduleStatus.classList.remove('hidden');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        enableTasksScheduleBtn.disabled = false;
+                        enableTasksScheduleBtn.innerHTML = originalContent;
+                    }
+                });
+            }
+            
+            // Выключить автообновление задач
+            const disableTasksScheduleBtn = document.getElementById('disable-tasks-schedule-btn');
+            
+            if (disableTasksScheduleBtn) {
+                disableTasksScheduleBtn.addEventListener('click', async function() {
+                    if (!confirm('Выключить автоматическое обновление задач?')) return;
+                    
+                    const originalContent = disableTasksScheduleBtn.innerHTML;
+                    disableTasksScheduleBtn.disabled = true;
+                    disableTasksScheduleBtn.innerHTML = '<div class="spinner mx-auto border-white/50 border-t-white"></div>';
+                    
+                    try {
+                        const result = await apiCall('removeTasksSchedule');
+                        if (result.success) {
+                            showToast('Автообновление выключено', 'success');
+                            tasksScheduleStatus.className = 'mt-4 p-3 rounded-xl text-sm font-medium bg-gray-50 text-gray-700 border border-gray-200';
+                            tasksScheduleStatus.innerHTML = '<i class="fas fa-info-circle mr-2"></i>Автообновление отключено';
+                            tasksScheduleStatus.classList.remove('hidden');
+                        } else {
+                            showToast('Ошибка: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Ошибка соединения', 'error');
+                    } finally {
+                        disableTasksScheduleBtn.disabled = false;
+                        disableTasksScheduleBtn.innerHTML = originalContent;
                     }
                 });
             }
